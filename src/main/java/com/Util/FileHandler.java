@@ -1,8 +1,6 @@
 package com.Util;
 
-import com.Model.User;
-import com.Model.Student;
-import com.Model.Instructor;
+import com.Model.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -10,6 +8,7 @@ import java.util.List;
 
 public class FileHandler {
     private static final String FILE_PATH = "webapp/data/users.txt";
+    private static final String LESSONS_FILE = "webapp/data/lessons.txt";
 
     public static List<User> readUsers(String rootPath) throws IOException {
         List<User> users = new ArrayList<>();
@@ -53,4 +52,56 @@ public class FileHandler {
             }
         }
     }
+
+    public static List<Lesson> readLessons(String rootPath) throws IOException {
+        List<Lesson> lessons = new ArrayList<>();
+        File file = new File(rootPath + LESSONS_FILE);
+        if (!file.exists()) return lessons;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",", 2); // Split into type and the rest
+                if (parts.length < 2) continue; // Skip malformed lines
+                String lessonType = parts[0];
+                Lesson lesson = Lesson.fromFileString(parts[1]);
+                if (lessonType.equals("BeginnerLesson")) {
+                    lessons.add(new BeginnerLesson(
+                            lesson.getLessonId(),
+                            lesson.getStudentId(),
+                            lesson.getInstructorId(),
+                            lesson.getDate(),
+                            lesson.getTime(),
+                            lesson.getType()
+                    ));
+                } else if (lessonType.equals("AdvancedLesson")) {
+                    lessons.add(new AdvancedLesson(
+                            lesson.getLessonId(),
+                            lesson.getStudentId(),
+                            lesson.getInstructorId(),
+                            lesson.getDate(),
+                            lesson.getTime(),
+                            lesson.getType()
+                    ));
+                } else {
+                    lessons.add(lesson); // Fallback to base Lesson if type is unknown
+                }
+            }
+        }
+        return lessons;
+    }
+
+    public static void writeLessons(List<Lesson> lessons, String rootPath) throws IOException {
+        File file = new File(rootPath + LESSONS_FILE);
+        file.getParentFile().mkdirs();
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            for (Lesson lesson : lessons) {
+                String lessonType = (lesson instanceof BeginnerLesson) ? "BeginnerLesson" :
+                        (lesson instanceof AdvancedLesson) ? "AdvancedLesson" : "Lesson";
+                writer.write(lessonType + "," + lesson.toFileString());
+                writer.newLine();
+            }
+        }
+    }
 }
+

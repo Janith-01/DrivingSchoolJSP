@@ -32,12 +32,11 @@ public class LoginServlet extends HttpServlet {
                 .findFirst()
                 .orElse(null);
 
-        if (user != null) {
-            HttpSession session = req.getSession();
-            session.setAttribute("user", user);
-            resp.sendRedirect("user?action=list");
+        if (user != null && user instanceof com.Model.Student) {
+            req.getSession().setAttribute("loggedInUser", user);
+            resp.sendRedirect(req.getContextPath() + "/lesson");
         } else {
-            req.setAttribute("error", "Invalid email or password");
+            req.setAttribute("error", "Invalid login credentials");
             req.getRequestDispatcher("/jsp/login.jsp").forward(req, resp);
         }
     }

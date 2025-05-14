@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="com.drivingschool.model.User" %>
-<%@ page import="com.drivingschool.model.Instructor" %>
+<%@ page import="com.Model.User" %>
+<%@ page import="com.Model.Instructor" %>
 <html>
 <head>
     <title>Edit Profile - Driving School</title>
