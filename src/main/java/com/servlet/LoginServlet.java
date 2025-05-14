@@ -34,7 +34,7 @@ public class LoginServlet extends HttpServlet {
 
         if (user != null && user instanceof com.Model.Student) {
             req.getSession().setAttribute("loggedInUser", user);
-            resp.sendRedirect(req.getContextPath() + "/lesson");
+            resp.sendRedirect(req.getContextPath() + "jsp/bookingForm.jsp");
         } else {
             req.setAttribute("error", "Invalid login credentials");
             req.getRequestDispatcher("/jsp/login.jsp").forward(req, resp);
