@@ -17,6 +17,33 @@
             font-size: 0.875rem;
             margin-top: 0.25rem;
         }
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #4CAF50;
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            font-size: 1rem;
+        }
+        .toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -24,21 +51,19 @@
         <h1 class="text-2xl font-bold mb-4 text-center">Book a Driving Lesson</h1>
         <p class="text-center text-gray-600 mb-6">Current Date & Time: <%= new java.text.SimpleDateFormat("EEEE, MMMM dd, yyyy hh:mm a z").format(new java.util.Date()) %></p>
 
-        <!-- Display error message if present -->
         <% if (request.getAttribute("error") != null) { %>
             <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
                 <p><%= request.getAttribute("error") %></p>
             </div>
         <% } %>
 
-        <!-- Fetch logged-in student's ID -->
+        <!-- Fetch logged-in student's Name -->
         <%
             User loggedInUser = (User) session.getAttribute("loggedInUser");
-            String studentId = "";
+            String studentName = "";
             if (loggedInUser != null && loggedInUser instanceof com.Model.Student) {
-                studentId = loggedInUser.getId();
+                studentName = loggedInUser.getName();
             } else {
-                // Redirect to login if no logged-in student is found
                 response.sendRedirect(request.getContextPath() + "/login");
                 return;
             }
@@ -59,20 +84,20 @@
             <input type="hidden" name="action" value="register">
 
             <div class="mb-4">
-                <label for="studentId" class="block text-sm font-medium text-gray-700">Student ID</label>
-                <input type="text" id="studentId" name="studentId" value="<%= studentId %>" class="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-100" readonly>
-                <div id="studentIdError" class="error-message"></div>
+                <label for="studentName" class="block text-sm font-medium text-gray-700">Student Name</label>
+                <input type="text" id="studentName" name="studentName" value="<%= studentName %>" class="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-100" readonly>
+                <div id="studentNameError" class="error-message"></div>
             </div>
 
             <div class="mb-4">
-                <label for="instructorId" class="block text-sm font-medium text-gray-700">Select Instructor</label>
-                <select id="instructorId" name="instructorId" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <label for="instructorName" class="block text-sm font-medium text-gray-700">Select Instructor</label>
+                <select id="instructorName" name="instructorName" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     <option value="" disabled selected>Select an instructor</option>
                     <% for (Instructor instructor : instructors) { %>
-                        <option value="<%= instructor.getId() %>"><%= instructor.getId() %> - <%= instructor.getName() %></option>
+                        <option value="<%= instructor.getName() %>"><%= instructor.getName() %></option>
                     <% } %>
                 </select>
-                <div id="instructorIdError" class="error-message"></div>
+                <div id="instructorNameError" class="error-message"></div>
             </div>
 
             <div class="mb-4">
@@ -102,25 +127,28 @@
                 <a href="${pageContext.request.contextPath}/lesson?action=list" class="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600">View Lessons</a>
             </div>
         </form>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast">Successfully booked the lesson!</div>
     </div>
 
     <script>
         function validateForm() {
             let isValid = true;
-            const instructorId = document.getElementById("instructorId").value;
+            const instructorName = document.getElementById("instructorName").value;
             const date = document.getElementById("date").value;
             const time = document.getElementById("time").value;
             const type = document.getElementById("type").value;
 
             // Reset error messages
-            document.getElementById("instructorIdError").textContent = "";
+            document.getElementById("instructorNameError").textContent = "";
             document.getElementById("dateError").textContent = "";
             document.getElementById("timeError").textContent = "";
             document.getElementById("typeError").textContent = "";
 
             // Validate Instructor Selection
-            if (!instructorId) {
-                document.getElementById("instructorIdError").textContent = "Please select an instructor";
+            if (!instructorName) {
+                document.getElementById("instructorNameError").textContent = "Please select an instructor";
                 isValid = false;
             }
 
@@ -154,6 +182,16 @@
 
             return isValid;
         }
+
+        // Show toast on successful booking
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'true') {
+                const toast = document.getElementById("toast");
+                toast.className = "toast show";
+                setTimeout(() => { toast.className = "toast"; }, 3000); // Hide after 3 seconds
+            }
+        };
     </script>
 </body>
 </html>

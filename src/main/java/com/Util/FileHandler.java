@@ -56,37 +56,45 @@ public class FileHandler {
     public static List<Lesson> readLessons(String rootPath) throws IOException {
         List<Lesson> lessons = new ArrayList<>();
         File file = new File(rootPath + LESSONS_FILE);
-        if (!file.exists()) return lessons;
+        System.out.println("Attempting to read lessons from: " + file.getAbsolutePath());
+        if (!file.exists()) {
+            System.out.println("Lessons file does not exist at: " + file.getAbsolutePath());
+            return lessons;
+        }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
+                System.out.println("Processing line: " + line);
                 String[] parts = line.split(",", 2); // Split into type and the rest
-                if (parts.length < 2) continue; // Skip malformed lines
+                if (parts.length < 2) {
+                    System.out.println("Skipping malformed line: " + line);
+                    continue;
+                }
                 String lessonType = parts[0];
-                Lesson lesson = Lesson.fromFileString(parts[1]);
+                String[] lessonParts = parts[1].split(",", 6);
+                if (lessonParts.length < 6) {
+                    System.out.println("Skipping malformed lesson data: " + parts[1]);
+                    continue;
+                }
+                String lessonId = lessonParts[0];
+                String studentName = lessonParts[1];
+                String instructorName = lessonParts[2];
+                String date = lessonParts[3];
+                String time = lessonParts[4];
+                String type = lessonParts[5];
+
                 if (lessonType.equals("BeginnerLesson")) {
-                    lessons.add(new BeginnerLesson(
-                            lesson.getLessonId(),
-                            lesson.getStudentId(),
-                            lesson.getInstructorId(),
-                            lesson.getDate(),
-                            lesson.getTime(),
-                            lesson.getType()
-                    ));
+                    lessons.add(new BeginnerLesson(lessonId, studentName, instructorName, date, time, type));
                 } else if (lessonType.equals("AdvancedLesson")) {
-                    lessons.add(new AdvancedLesson(
-                            lesson.getLessonId(),
-                            lesson.getStudentId(),
-                            lesson.getInstructorId(),
-                            lesson.getDate(),
-                            lesson.getTime(),
-                            lesson.getType()
-                    ));
+                    lessons.add(new AdvancedLesson(lessonId, studentName, instructorName, date, time, type));
                 } else {
-                    lessons.add(lesson); // Fallback to base Lesson if type is unknown
+                    System.out.println("Unknown lesson type: " + lessonType);
                 }
             }
+            System.out.println("Successfully read " + lessons.size() + " lessons from file.");
+        } catch (IOException e) {
+            System.err.println("Error reading lessons: " + e.getMessage());
         }
         return lessons;
     }
@@ -101,7 +109,7 @@ public class FileHandler {
                 writer.write(lessonType + "," + lesson.toFileString());
                 writer.newLine();
             }
+            System.out.println("Wrote " + lessons.size() + " lessons to file.");
         }
     }
 }
-

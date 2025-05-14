@@ -17,7 +17,7 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // Forward to login.jsp for GET requests
-        req.getRequestDispatcher("/jsp/login.jsp").forward(req, resp);
+        req.getRequestDispatcher("/jsp/common/login.jsp").forward(req, resp);
     }
 
     @Override
@@ -37,21 +37,21 @@ public class LoginServlet extends HttpServlet {
             String role = user.getRole();
             switch (role) {
                 case "Student":
-                    resp.sendRedirect(req.getContextPath() + "/jsp/studentHome.jsp");
+                    resp.sendRedirect(req.getContextPath() + "/jsp/studentPages/studentHome.jsp");
                     break;
                 case "Instructor":
-                    resp.sendRedirect(req.getContextPath() + "/jsp/instructorHome.jsp");
+                    resp.sendRedirect(req.getContextPath() + "/jsp/instructorPages/instructorHome.jsp");
                     break;
                 case "Admin":
-                    resp.sendRedirect(req.getContextPath() + "/jsp/adminHome.jsp");
+                    resp.sendRedirect(req.getContextPath() + "/jsp/adminpages/adminHome.jsp");
                     break;
                 default:
                     req.setAttribute("error", "Unknown user role");
-                    req.getRequestDispatcher("/jsp/login.jsp").forward(req, resp);
+                    req.getRequestDispatcher("/jsp/common/login.jsp").forward(req, resp);
             }
         } else {
             req.setAttribute("error", "Invalid login credentials");
-            req.getRequestDispatcher("/jsp/login.jsp").forward(req, resp);
+            req.getRequestDispatcher("/jsp/common/login.jsp").forward(req, resp);
         }
     }
 }

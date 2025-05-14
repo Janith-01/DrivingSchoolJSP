@@ -14,7 +14,7 @@
         <div id="userDetails" class="mb-4 text-gray-700" style="display: block; min-height: 100px; border: 1px solid blue;"></div>
         <div class="space-y-4">
             <a href="<%= request.getContextPath() %>/lesson?action=list" class="block bg-blue-500 text-white p-2 rounded-md text-center hover:bg-blue-600">View Lessons</a>
-            <a href="<%= request.getContextPath() %>/scheduleLesson" class="block bg-green-500 text-white p-2 rounded-md text-center hover:bg-green-600">Book a Lesson</a>
+            <a href="<%= request.getContextPath() %>/lesson" class="block bg-green-500 text-white p-2 rounded-md text-center hover:bg-green-600">Book a Lesson</a>
             <a href="<%= request.getContextPath() %>/user?action=edit&id=<%= ((User) session.getAttribute("loggedInUser")).getId() %>" class="block bg-gray-500 text-white p-2 rounded-md text-center hover:bg-gray-600">View/Edit Profile</a>
         </div>
         <a href="<%= request.getContextPath() %>/logout" class="mt-6 inline-block text-red-500 hover:underline">Logout</a>
