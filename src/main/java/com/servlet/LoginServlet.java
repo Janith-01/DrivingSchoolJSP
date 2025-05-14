@@ -32,9 +32,23 @@ public class LoginServlet extends HttpServlet {
                 .findFirst()
                 .orElse(null);
 
-        if (user != null && user instanceof com.Model.Student) {
+        if (user != null) {
             req.getSession().setAttribute("loggedInUser", user);
-            resp.sendRedirect(req.getContextPath() + "/lesson");
+            String role = user.getRole();
+            switch (role) {
+                case "Student":
+                    resp.sendRedirect(req.getContextPath() + "/jsp/studentHome.jsp");
+                    break;
+                case "Instructor":
+                    resp.sendRedirect(req.getContextPath() + "/jsp/instructorHome.jsp");
+                    break;
+                case "Admin":
+                    resp.sendRedirect(req.getContextPath() + "/jsp/adminHome.jsp");
+                    break;
+                default:
+                    req.setAttribute("error", "Unknown user role");
+                    req.getRequestDispatcher("/jsp/login.jsp").forward(req, resp);
+            }
         } else {
             req.setAttribute("error", "Invalid login credentials");
             req.getRequestDispatcher("/jsp/login.jsp").forward(req, resp);

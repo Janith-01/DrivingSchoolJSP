@@ -24,14 +24,14 @@ public class LessonServlet extends HttpServlet {
 
         if ("list".equals(action)) {
             req.setAttribute("lessons", lessons);
-            req.getRequestDispatcher("/jsp/lesson/lessonList.jsp").forward(req, resp);
+            req.getRequestDispatcher("/jsp/lessonList.jsp").forward(req, resp);
         } else if ("edit".equals(action)) {
             String lessonId = req.getParameter("lessonId");
             Lesson lesson = lessons.stream().filter(l -> l.getLessonId().equals(lessonId)).findFirst().orElse(null);
             req.setAttribute("lesson", lesson);
-            req.getRequestDispatcher("/jsp/lesson/reschedule.jsp").forward(req, resp);
+            req.getRequestDispatcher("/jsp/reschedule.jsp").forward(req, resp);
         } else {
-            req.getRequestDispatcher("/jsp/lesson/bookingForm.jsp").forward(req, resp);
+            req.getRequestDispatcher("/jsp/bookingForm.jsp").forward(req, resp);
         }
     }
 

@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="com.Model.User" %>
 <html>
 <head>
     <title>Login - Driving School</title>
@@ -25,5 +26,12 @@
         </form>
     </div>
 </div>
+<script>
+    // Check if user is logged in (set by LoginServlet after redirect back to login.jsp with success)
+    <% User loggedInUser = (User) session.getAttribute("loggedInUser"); %>
+    <% if (loggedInUser != null) { %>
+        localStorage.setItem('userId', '<%= loggedInUser.getId() %>');
+    <% } %>
+</script>
 </body>
 </html>

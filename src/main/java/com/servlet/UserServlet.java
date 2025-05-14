@@ -5,13 +5,13 @@ import com.Model.Student;
 import com.Model.Instructor;
 import com.Util.FileHandler;
 
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,6 +31,28 @@ public class UserServlet extends HttpServlet {
             User user = users.stream().filter(u -> u.getId().equals(id)).findFirst().orElse(null);
             req.setAttribute("user", user);
             req.getRequestDispatcher("/jsp/profile.jsp").forward(req, resp);
+        } else if ("getById".equals(action)) {
+            String id = req.getParameter("id");
+            User user = users.stream().filter(u -> u.getId().equals(id)).findFirst().orElse(null);
+            resp.setContentType("application/json");
+            PrintWriter out = resp.getWriter();
+            if (user != null) {
+                // Sanitize fields to avoid null values
+                String email = user.getEmail() != null ? user.getEmail() : "";
+                String phone = user.getPhone() != null ? user.getPhone() : "";
+                String role = user.getRole() != null ? user.getRole() : "";
+                String certification = user instanceof Instructor ? ((Instructor) user).getCertification() : null;
+
+                String json = String.format("{\"id\":\"%s\",\"name\":\"%s\",\"email\":\"%s\",\"role\":\"%s\",\"phone\":\"%s\"%s}",
+                        user.getId(), user.getName() != null ? user.getName() : "",
+                        email, role, phone,
+                        certification != null ? ",\"certification\":\"" + certification + "\"" : "");
+                out.print(json);
+            } else {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                out.print("{\"error\":\"User not found\"}");
+            }
+            out.flush();
         } else {
             req.getRequestDispatcher("/jsp/register.jsp").forward(req, resp);
         }

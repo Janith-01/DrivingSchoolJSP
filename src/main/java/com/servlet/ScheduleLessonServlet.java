@@ -23,9 +23,9 @@ public class ScheduleLessonServlet extends HttpServlet {
             String rootPath = getServletContext().getRealPath("/");
             List<Lesson> lessons = FileHandler.readLessons(rootPath);
             req.setAttribute("lessons", lessons);
-            req.getRequestDispatcher("/jsp/lesson/calendar.jsp").forward(req, resp);
+            req.getRequestDispatcher("/jsp/calendar.jsp").forward(req, resp);
         } else {
-            req.getRequestDispatcher("/jsp/lesson/bookingForm.jsp").forward(req, resp);
+            req.getRequestDispatcher("/jsp/bookingForm.jsp").forward(req, resp);
         }
     }
 
@@ -47,7 +47,7 @@ public class ScheduleLessonServlet extends HttpServlet {
             boolean isSlotAvailable = checkInstructorAvailability(lessons, instructorId, date, time, type);
             if (!isSlotAvailable) {
                 req.setAttribute("error", "Instructor is not available at the selected time.");
-                req.getRequestDispatcher("/jsp/lesson/bookingForm.jsp").forward(req, resp);
+                req.getRequestDispatcher("/jsp/bookingForm.jsp").forward(req, resp);
                 return;
             }
 
@@ -72,7 +72,7 @@ public class ScheduleLessonServlet extends HttpServlet {
             boolean isSlotAvailable = checkInstructorAvailability(lessons, instructorId, date, time, type);
             if (!isSlotAvailable) {
                 req.setAttribute("error", "Instructor is not available at the selected time.");
-                req.getRequestDispatcher("/jsp/lesson/reschedule.jsp").forward(req, resp);
+                req.getRequestDispatcher("/jsp/reschedule.jsp").forward(req, resp);
                 return;
             }
 
