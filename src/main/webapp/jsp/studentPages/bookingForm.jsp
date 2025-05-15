@@ -47,6 +47,7 @@
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
+<%@ include file="studentNavbar.jsp" %>
     <div class="container mx-auto p-6 max-w-lg">
         <h1 class="text-2xl font-bold mb-4 text-center">Book a Driving Lesson</h1>
         <p class="text-center text-gray-600 mb-6">Current Date & Time: <%= new java.text.SimpleDateFormat("EEEE, MMMM dd, yyyy hh:mm a z").format(new java.util.Date()) %></p>

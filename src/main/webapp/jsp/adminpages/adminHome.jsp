@@ -2,24 +2,45 @@
 <%@ page import="com.Model.User" %>
 <html>
 <head>
-    <title>Admin Home - Driving School</title>
+    <title>Admin Dashboard - Driving School</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="../css/styles.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
-<div class="container mx-auto p-4">
-    <div class="bg-white shadow-md rounded-lg p-6 max-w-2xl mx-auto">
-        <h2 class="text-3xl font-bold mb-4">Welcome, <%= ((User) session.getAttribute("loggedInUser")).getName() %>!</h2>
-        <p class="text-lg mb-4">You are logged in as an <span class="font-semibold">Admin</span>.</p>
-        <div id="userDetails" class="mb-4 text-gray-700" style="display: block; min-height: 100px; border: 1px solid blue;"></div>
-        <div class="space-y-4">
-            <a href="<%= request.getContextPath() %>/user?action=list" class="block bg-blue-500 text-white p-2 rounded-md text-center hover:bg-blue-600">Manage Users</a>
-            <a href="<%= request.getContextPath() %>/lesson?action=list" class="block bg-green-500 text-white p-2 rounded-md text-center hover:bg-green-600">Manage Lessons</a>
-            <a href="#" class="block bg-gray-500 text-white p-2 rounded-md text-center hover:bg-gray-600 opacity-50 cursor-not-allowed">System Settings (Coming Soon)</a>
+<!-- Include Navigation Bar -->
+<%@ include file="adminNavbar.jsp" %>
+
+<div class="container mx-auto p-6">
+    <div class="bg-white shadow-lg rounded-lg p-8 max-w-4xl mx-auto">
+        <h2 class="text-4xl font-bold text-gray-800 mb-6">Welcome, <%= ((User) session.getAttribute("loggedInUser")).getName() %>!</h2>
+        <p class="text-lg text-gray-600 mb-8">You are logged in as an <span class="font-semibold text-blue-600">Admin</span>. Manage your driving school operations efficiently from this dashboard.</p>
+
+        <!-- User Details Section -->
+        <div class="mb-8 bg-blue-50 p-6 rounded-lg border border-blue-200">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Your Profile</h3>
+            <div id="userDetails" class="text-gray-700"></div>
         </div>
-        <a href="<%= request.getContextPath() %>/logout" class="mt-6 inline-block text-red-500 hover:underline">Logout</a>
+
+        <!-- Quick Actions Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <a href="<%= request.getContextPath() %>/user?action=list" class="bg-blue-500 text-white p-6 rounded-lg shadow-md hover:bg-blue-600 transition duration-200 flex items-center space-x-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <div>
+                    <h4 class="text-lg font-semibold">Manage Users</h4>
+                    <p class="text-sm">View, edit, or add students and admins.</p>
+                </div>
+            </a>
+            <a href="<%= request.getContextPath() %>/instructor?action=list" class="bg-green-500 text-white p-6 rounded-lg shadow-md hover:bg-green-600 transition duration-200 flex items-center space-x-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div>
+                    <h4 class="text-lg font-semibold">Manage Instructors</h4>
+                    <p class="text-sm">View, register, or update instructor details.</p>
+                </div>
+            </a>
+        </div>
     </div>
 </div>
+
 <script>
     // Save user ID to localStorage on page load
     const userId = '<%= ((User) session.getAttribute("loggedInUser")).getId() %>';

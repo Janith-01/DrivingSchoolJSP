@@ -8,6 +8,7 @@
     <link href="css/styles.css" rel="stylesheet">
 </head>
 <body>
+<%@ include file="adminNavbar.jsp" %>
 <div class="container">
     <div class="card">
         <h2 class="text-2xl font-bold mb-4">User List</h2>

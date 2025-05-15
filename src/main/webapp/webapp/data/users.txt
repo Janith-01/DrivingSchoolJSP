@@ -1,7 +1,2 @@
-<<<<<<< HEAD
-04fa183d-5ed6-4eef-9858-9950515faa69,Student,adeesha,adeesha@gmail.com,adeesha,1234567890
-e08ad5fb-6195-48d0-9613-57ba8e1605f5,Instructor,paf,sumududias@gmail.com,paf,1234567890,wcracf
-=======
-d26aa878-b280-4ecf-ad42-c1e6401e2f6d,Student,Janith Viranga Majuwana Gamage,Janithviranga001@gmail.com,123456,0762264985
-ed05bf72-49b1-40bd-971c-a2fba21e87b4,Instructor,Ridma Chalana,ridmachalanavip@gmail.com,123456,0762264985,aifibfiabosfbasojf
->>>>>>> cb0db0c3034889f0a43f661d984857a5fbb49675
+admin-001,Admin User,admin@drivingschool.com,admin123,555-123-4567,Admin
+eda8f28a-0f5d-4ee9-a71d-05f0eaa3b277,adeesha,adeesha@gmail.com,adeesha,1234567890,Student

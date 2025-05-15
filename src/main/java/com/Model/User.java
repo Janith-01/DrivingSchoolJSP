@@ -6,6 +6,7 @@ public abstract class User {
     private String email;
     private String password;
     private String phone;
+    private String role;
 
     public User(String id, String name, String email, String password, String phone) {
         this.id = id;
@@ -13,9 +14,9 @@ public abstract class User {
         this.email = email;
         this.password = password;
         this.phone = phone;
+        this.role = "Student";
     }
 
-    // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getName() { return name; }
@@ -26,7 +27,6 @@ public abstract class User {
     public void setPassword(String password) { this.password = password; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
-
-    // Abstract method for polymorphism
-    public abstract String getRole();
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }
