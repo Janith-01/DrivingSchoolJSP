@@ -38,12 +38,49 @@ public class LessonServlet extends HttpServlet {
             return;
         }
 
-        if ("instructorView".equals(action)) {
-            handleInstructorView(req, resp, rootPath, user);
-        } else if ("list".equals(action)) {
-            handleStudentView(req, resp, rootPath, user);
-        } else {
+        switch (action) {
+            case "instructorView":
+                handleInstructorView(req, resp, rootPath, user);
+                break;
+            case "list":
+                handleStudentView(req, resp, rootPath, user);
+                break;
+            case "edit":
+                handleEditView(req, resp, rootPath, user);
+                break;
+            case "delete":
+                handleDeleteLesson(req, resp, rootPath, user);
+                break;
+            default:
+                resp.sendRedirect(req.getContextPath() + "/login");
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        String action = req.getParameter("action");
+        String rootPath = getServletContext().getRealPath("/");
+        User user = (User) req.getSession().getAttribute("loggedInUser");
+
+        if (user == null) {
             resp.sendRedirect(req.getContextPath() + "/login");
+            return;
+        }
+
+        switch (action) {
+            case "register":
+                handleLessonRegistration(req, resp, rootPath, user);
+                break;
+            case "update":
+                handleLessonUpdate(req, resp, rootPath, user);
+                break;
+            case "ACCEPTED":
+            case "DENIED":
+                handleStatusChange(req, resp, rootPath, action);
+                break;
+            default:
+                resp.sendRedirect(req.getContextPath() + "/login");
         }
     }
 
@@ -76,18 +113,38 @@ public class LessonServlet extends HttpServlet {
         req.getRequestDispatcher("/jsp/studentPages/lessonList.jsp").forward(req, resp);
     }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+    private void handleEditView(HttpServletRequest req, HttpServletResponse resp,
+                                String rootPath, User user)
             throws ServletException, IOException {
-        String action = req.getParameter("action");
-        String rootPath = getServletContext().getRealPath("/");
-        User user = (User) req.getSession().getAttribute("loggedInUser");
+        String lessonId = req.getParameter("lessonId");
+        List<Lesson> allLessons = FileHandler.readLessons(rootPath);
 
-        if ("register".equals(action)) {
-            handleLessonRegistration(req, resp, rootPath, user);
-        } else if ("ACCEPTED".equals(action) || "DENIED".equals(action)) {
-            handleStatusChange(req, resp, rootPath, action);
+        Lesson lessonToEdit = allLessons.stream()
+                .filter(l -> l.getLessonId().equals(lessonId))
+                .findFirst()
+                .orElse(null);
+
+        if (lessonToEdit == null || !lessonToEdit.getStudentName().equals(user.getName())) {
+            req.setAttribute("error", "Lesson not found or access denied");
+            handleStudentView(req, resp, rootPath, user);
+            return;
         }
+
+        // Check if lesson can be edited (only PENDING status)
+        if (!"PENDING".equalsIgnoreCase(lessonToEdit.getStatus())) {
+            req.setAttribute("error", "Only pending lessons can be modified");
+            handleStudentView(req, resp, rootPath, user);
+            return;
+        }
+
+        // Get available instructors for the dropdown
+        List<Instructor> instructors = FileHandler.readInstructors(rootPath).stream()
+                .filter(i -> "Available".equalsIgnoreCase(i.getAvailability()))
+                .collect(Collectors.toList());
+
+        req.setAttribute("lesson", lessonToEdit);
+        req.setAttribute("instructors", instructors);
+        req.getRequestDispatcher("/jsp/studentPages/UpdateBookingInfo.jsp").forward(req, resp);
     }
 
     private void handleLessonRegistration(HttpServletRequest req, HttpServletResponse resp,
@@ -99,6 +156,13 @@ public class LessonServlet extends HttpServlet {
         String date = req.getParameter("date");
         String time = req.getParameter("time");
         String type = req.getParameter("type");
+
+        // Validate inputs
+        if (instructorName == null || date == null || time == null || type == null) {
+            req.setAttribute("error", "All fields are required");
+            req.getRequestDispatcher("/jsp/studentPages/bookingForm.jsp").forward(req, resp);
+            return;
+        }
 
         Lesson lesson;
         if ("Beginner".equals(type)) {
@@ -114,6 +178,99 @@ public class LessonServlet extends HttpServlet {
 
         resp.sendRedirect(req.getContextPath() + "/jsp/studentPages/bookingForm.jsp?success=true");
     }
+
+    private void handleLessonUpdate(HttpServletRequest req, HttpServletResponse resp,
+                                    String rootPath, User user)
+            throws ServletException, IOException {
+        String lessonId = req.getParameter("lessonId");
+        String instructorName = req.getParameter("instructorName");
+        String date = req.getParameter("date");
+        String time = req.getParameter("time");
+        String type = req.getParameter("type");
+
+        // Validate inputs
+        if (lessonId == null || instructorName == null || date == null || time == null || type == null) {
+            req.setAttribute("error", "All fields are required");
+            handleEditView(req, resp, rootPath, user);
+            return;
+        }
+
+        List<Lesson> allLessons = FileHandler.readLessons(rootPath);
+        Lesson existingLesson = allLessons.stream()
+                .filter(l -> l.getLessonId().equals(lessonId))
+                .findFirst()
+                .orElse(null);
+
+        if (existingLesson == null || !existingLesson.getStudentName().equals(user.getName())) {
+            req.setAttribute("error", "Lesson not found or access denied");
+            handleStudentView(req, resp, rootPath, user);
+            return;
+        }
+
+        // Check if lesson can be edited (only PENDING status)
+        if (!"PENDING".equalsIgnoreCase(existingLesson.getStatus())) {
+            req.setAttribute("error", "Only pending lessons can be modified");
+            handleStudentView(req, resp, rootPath, user);
+            return;
+        }
+
+        // Create updated lesson
+        Lesson updatedLesson;
+        if ("Beginner".equals(type)) {
+            updatedLesson = new BeginnerLesson(lessonId, user.getName(), instructorName, date, time, type, existingLesson.getStatus());
+        } else {
+            updatedLesson = new AdvancedLesson(lessonId, user.getName(), instructorName, date, time, type, existingLesson.getStatus());
+        }
+
+        // Update in all collections
+        allLessons.removeIf(l -> l.getLessonId().equals(lessonId));
+        allLessons.add(updatedLesson);
+
+        lessonQueue.removeIf(l -> l.getLessonId().equals(lessonId));
+        if ("PENDING".equalsIgnoreCase(existingLesson.getStatus())) {
+            lessonQueue.add(updatedLesson);
+        }
+
+        FileHandler.writeLessons(allLessons, rootPath);
+
+        req.setAttribute("successMessage", "Lesson successfully updated");
+        handleStudentView(req, resp, rootPath, user);
+    }
+
+    private void handleDeleteLesson(HttpServletRequest req, HttpServletResponse resp,
+                                    String rootPath, User user)
+            throws ServletException, IOException {
+        String lessonId = req.getParameter("lessonId");
+        List<Lesson> allLessons = FileHandler.readLessons(rootPath);
+
+        Lesson lessonToDelete = allLessons.stream()
+                .filter(l -> l.getLessonId().equals(lessonId))
+                .findFirst()
+                .orElse(null);
+
+        if (lessonToDelete == null || !lessonToDelete.getStudentName().equals(user.getName())) {
+            req.setAttribute("error", "Lesson not found or access denied");
+            handleStudentView(req, resp, rootPath, user);
+            return;
+        }
+
+        // Check if lesson can be deleted (only PENDING status)
+        if (!"PENDING".equalsIgnoreCase(lessonToDelete.getStatus())) {
+            req.setAttribute("error", "Only pending lessons can be deleted");
+            handleStudentView(req, resp, rootPath, user);
+            return;
+        }
+
+        // Remove from all collections
+        allLessons.removeIf(l -> l.getLessonId().equals(lessonId));
+        lessonQueue.removeIf(l -> l.getLessonId().equals(lessonId));
+
+        FileHandler.writeLessons(allLessons, rootPath);
+
+        req.setAttribute("successMessage", "Lesson successfully deleted");
+        handleStudentView(req, resp, rootPath, user);
+    }
+
 
     private void handleStatusChange(HttpServletRequest req, HttpServletResponse resp,
                                     String rootPath, String action)
