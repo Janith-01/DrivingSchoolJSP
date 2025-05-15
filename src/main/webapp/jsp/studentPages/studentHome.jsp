@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.Model.User" %>
+<%@ page import="com.Model.Student" %>
 <html>
 <head>
     <title>Student Dashboard - Driving School</title>
@@ -7,12 +8,19 @@
     <link href="<%= request.getContextPath() %>/css/styles.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
+<%
+    User loggedInUser = (User) session.getAttribute("loggedInUser");
+    if (loggedInUser == null || !(loggedInUser instanceof Student)) {
+        response.sendRedirect(request.getContextPath() + "/login");
+        return;
+    }
+%>
 <!-- Include Navigation Bar -->
-<%@ include file="studentNavbar.jsp" %>
+<%@ include file="/jsp/studentPages/studentNavbar.jsp" %>
 
 <div class="container mx-auto p-6">
     <div class="bg-white shadow-lg rounded-lg p-8 max-w-4xl mx-auto">
-        <h2 class="text-4xl font-bold text-gray-800 mb-6">Welcome, <%= ((User) session.getAttribute("loggedInUser")).getName() %>!</h2>
+        <h2 class="text-4xl font-bold text-gray-800 mb-6">Welcome, <%= loggedInUser.getName() %>!</h2>
         <p class="text-lg text-gray-600 mb-8">You are logged in as a <span class="font-semibold text-blue-500">Student</span>. Book and manage your driving lessons from this dashboard.</p>
 
         <!-- User Details Section -->
@@ -23,11 +31,11 @@
 
         <!-- Quick Actions Section -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <a href="<%= request.getContextPath() %>/jsp/studentPages/bookingForm.jsp" class="bg-green-500 text-white p-6 rounded-lg shadow-md hover:bg-green-600 transition duration-200 flex items-center space-x-4">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            <a href="<%= request.getContextPath() %>/instructor?action=studentList" class="bg-purple-500 text-white p-6 rounded-lg shadow-md hover:bg-purple-600 transition duration-200 flex items-center space-x-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v1m-10 0a3 3 0 01-5.356 1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v1m5-10a3 3 0 110-6 3 3 0 010 6z"></path></svg>
                 <div>
-                    <h4 class="text-lg font-semibold">Book a Lesson</h4>
-                    <p class="text-sm">Schedule a new driving lesson with an instructor.</p>
+                    <h4 class="text-lg font-semibold">View Instructors</h4>
+                    <p class="text-sm">Browse available driving instructors.</p>
                 </div>
             </a>
             <a href="<%= request.getContextPath() %>/lesson?action=list" class="bg-blue-500 text-white p-6 rounded-lg shadow-md hover:bg-blue-600 transition duration-200 flex items-center space-x-4">
@@ -37,7 +45,8 @@
                     <p class="text-sm">Check your scheduled driving lessons.</p>
                 </div>
             </a>
-            <a href="<%= request.getContextPath() %>/user?action=edit&id=<%= ((User) session.getAttribute("loggedInUser")).getId() %>" class="bg-gray-500 text-white p-6 rounded-lg shadow-md hover:bg-gray-600 transition duration-200 flex items-center space-x-4">
+            <a href="<%= request.getContextPath() %>/user?action=edit&id=<%= loggedInUser.getId() %>" class="bg-gray-500 text-white p Fingerprint: 1a2b3c4d5e6f7g8h9i0j
+                    p-6 rounded-lg shadow-md hover:bg-gray-600 transition duration-200 flex items-center space-x-4">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                 <div>
                     <h4 class="text-lg font-semibold">View/Edit Profile</h4>

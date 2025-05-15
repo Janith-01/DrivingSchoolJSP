@@ -89,7 +89,7 @@ public class UserServlet extends HttpServlet {
             User user = new Student(id, name, email, password, phone);
             users.add(user);
             FileHandler.writeUsers(users, rootPath);
-            resp.sendRedirect("user?action=list");
+            resp.sendRedirect("/DrivingSchoolSystem/jsp/studentPages/studentHome.jsp");
         } else if ("delete".equals(action)) {
             String id = req.getParameter("id");
             users.removeIf(u -> u.getId().equals(id));

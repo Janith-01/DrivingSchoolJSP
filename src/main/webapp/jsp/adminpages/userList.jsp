@@ -31,7 +31,6 @@
                 <td class="p-2"><%= user.getEmail() %></td>
                 <td class="p-2"><%= user.getPhone() %></td>
                 <td class="p-2">
-                    <a href="user?action=edit&id=<%= user.getId() %>" class="text-blue-600 hover:underline">Edit</a>
                     <form action="user" method="post" class="inline-block ml-2" onsubmit="return confirm('Are you sure?');">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="id" value="<%= user.getId() %>">

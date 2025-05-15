@@ -3,6 +3,8 @@ package com.servlet;
 import com.Model.Instructor;
 import com.Model.PartTimeInstructor;
 import com.Model.FullTimeInstructor;
+import com.Model.Student;
+import com.Model.User;
 import com.Util.FileHandler;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -21,8 +23,21 @@ public class InstructorServlet extends HttpServlet {
         String action = req.getParameter("action");
         String rootPath = getServletContext().getRealPath("/");
         List<Instructor> instructors = FileHandler.readInstructors(rootPath);
+        User loggedInUser = (User) req.getSession().getAttribute("loggedInUser");
 
-        if ("list".equals(action)) {
+        if ("studentList".equals(action)) {
+            if (loggedInUser == null || !(loggedInUser instanceof Student)) {
+                resp.sendRedirect(req.getContextPath() + "/login");
+                return;
+            }
+            instructors = FileHandler.sortInstructorsByExperience(instructors);
+            req.setAttribute("instructors", instructors);
+            req.getRequestDispatcher("/jsp/studentPages/instructorList.jsp").forward(req, resp);
+        } else if ("list".equals(action)) {
+            if (loggedInUser == null || !"Admin".equals(loggedInUser.getRole())) {
+                resp.sendRedirect(req.getContextPath() + "/login");
+                return;
+            }
             instructors = FileHandler.sortInstructorsByExperience(instructors);
             req.setAttribute("instructors", instructors);
             req.getRequestDispatcher("/jsp/adminpages/instructorList.jsp").forward(req, resp);
@@ -44,7 +59,15 @@ public class InstructorServlet extends HttpServlet {
                         .toList();
             }
             req.setAttribute("instructors", instructors);
-            req.getRequestDispatcher("/jsp/adminpages/instructorList.jsp").forward(req, resp);
+            if (loggedInUser != null && loggedInUser instanceof Student) {
+                req.getRequestDispatcher("/jsp/studentPages/instructorList.jsp").forward(req, resp);
+            } else {
+                if (loggedInUser == null || !"Admin".equals(loggedInUser.getRole())) {
+                    resp.sendRedirect(req.getContextPath() + "/login");
+                    return;
+                }
+                req.getRequestDispatcher("/jsp/adminpages/instructorList.jsp").forward(req, resp);
+            }
         } else if ("getById".equals(action)) {
             String id = req.getParameter("id");
             Instructor instructor = instructors.stream().filter(i -> i.getId().equals(id)).findFirst().orElse(null);
@@ -90,7 +113,6 @@ public class InstructorServlet extends HttpServlet {
             String certifications = req.getParameter("certifications");
             String type = req.getParameter("type");
 
-            // Validation
             if (name == null || email == null || password == null || experienceStr == null ||
                     availability == null || certifications == null || type == null ||
                     name.trim().isEmpty() || email.trim().isEmpty() || password.trim().isEmpty() ||
@@ -151,8 +173,20 @@ public class InstructorServlet extends HttpServlet {
             resp.sendRedirect("instructor?action=list");
         } else if ("delete".equals(action)) {
             String id = req.getParameter("id");
-            instructors.removeIf(i -> i.getId().equals(id));
-            FileHandler.writeInstructors(instructors, rootPath);
+            System.out.println("Delete action called for instructor ID: " + id);
+            int initialSize = instructors.size();
+            boolean removed = instructors.removeIf(i -> i.getId().equals(id));
+            System.out.println("Instructor removed: " + removed + ", Initial size: " + initialSize + ", New size: " + instructors.size());
+            try {
+                FileHandler.writeInstructors(instructors, rootPath);
+                System.out.println("Instructors written to file successfully");
+                req.setAttribute("success", "Instructor deleted successfully.");
+            } catch (IOException e) {
+                System.err.println("Failed to write instructors: " + e.getMessage());
+                req.setAttribute("error", "Failed to delete instructor due to file error.");
+                req.getRequestDispatcher("/jsp/adminpages/instructorList.jsp").forward(req, resp);
+                return;
+            }
             resp.sendRedirect("instructor?action=list");
         }
     }

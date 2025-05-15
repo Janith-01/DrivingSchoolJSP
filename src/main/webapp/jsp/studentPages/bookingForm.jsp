@@ -47,7 +47,7 @@
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
-<%@ include file="studentNavbar.jsp" %>
+<%@ include file="/jsp/studentPages/studentNavbar.jsp" %>
     <div class="container mx-auto p-6 max-w-lg">
         <h1 class="text-2xl font-bold mb-4 text-center">Book a Driving Lesson</h1>
         <p class="text-center text-gray-600 mb-6">Current Date & Time: <%= new java.text.SimpleDateFormat("EEEE, MMMM dd, yyyy hh:mm a z").format(new java.util.Date()) %></p>
@@ -70,14 +70,22 @@
             }
         %>
 
-        <!-- Fetch registered instructors -->
+        <!-- Fetch available instructors -->
         <%
             String rootPath = getServletContext().getRealPath("/");
-            List<User> users = FileHandler.readUsers(rootPath);
-            List<Instructor> instructors = users.stream()
-                .filter(user -> user instanceof Instructor)
-                .map(user -> (Instructor) user)
+            List<Instructor> instructors = FileHandler.readInstructors(rootPath).stream()
+                .filter(instructor -> {
+                    String availability = instructor.getAvailability();
+                    return availability != null && availability.trim().equalsIgnoreCase("Available");
+                })
                 .collect(Collectors.toList());
+
+            // Debug logging
+            System.out.println("Total instructors loaded: " + FileHandler.readInstructors(rootPath).size());
+            System.out.println("Available instructors: " + instructors.size());
+            for (Instructor instructor : instructors) {
+                System.out.println("Instructor: " + instructor.getName() + ", Availability: " + instructor.getAvailability());
+            }
         %>
 
         <!-- Lesson Booking Form -->
@@ -94,8 +102,12 @@
                 <label for="instructorName" class="block text-sm font-medium text-gray-700">Select Instructor</label>
                 <select id="instructorName" name="instructorName" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     <option value="" disabled selected>Select an instructor</option>
-                    <% for (Instructor instructor : instructors) { %>
-                        <option value="<%= instructor.getName() %>"><%= instructor.getName() %></option>
+                    <% if (instructors.isEmpty()) { %>
+                        <option value="" disabled>No available instructors</option>
+                    <% } else { %>
+                        <% for (Instructor instructor : instructors) { %>
+                            <option value="<%= instructor.getName() %>"><%= instructor.getName() %></option>
+                        <% } %>
                     <% } %>
                 </select>
                 <div id="instructorNameError" class="error-message"></div>
