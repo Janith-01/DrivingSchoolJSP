@@ -40,7 +40,7 @@
 <div class="container mx-auto px-4">
     <div class="max-w-md mx-auto bg-white shadow-xl rounded-lg p-8">
         <h2 class="text-3xl font-bold text-gray-800 text-center mb-6">Login to Driving School</h2>
-        <form action="login" method="post" class="space-y-6">
+        <form action="<%= request.getContextPath() %>/login" method="post" class="space-y-6">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Email</label>
                 <input type="email" name="email" required class="mt-1 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">

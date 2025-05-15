@@ -1,12 +1,13 @@
 package com.Model;
 
 public class AdvancedLesson extends Lesson {
-    public AdvancedLesson(String lessonId, String studentName, String instructorName, String date, String time, String type) {
-        super(lessonId, studentName, instructorName, date, time, type);
+    public AdvancedLesson(String lessonId, String studentName, String instructorName,
+                          String date, String time, String type, String status) {
+        super(lessonId, studentName, instructorName, date, time, type, status);
     }
 
     @Override
     public String getSchedulingRules() {
-        return "Advanced lesson " + getLessonId() + " requires a 2-hour slot with an advanced certified instructor.";
+        return "2-hour sessions, requires completion of 5 beginner lessons";
     }
 }

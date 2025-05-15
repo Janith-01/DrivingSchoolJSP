@@ -169,31 +169,51 @@ public class FileHandler {
 
     public static List<Lesson> readLessons(String rootPath) throws IOException {
         List<Lesson> lessons = new ArrayList<>();
-        File file = new File(rootPath + LESSONS_FILE);
-        if (!file.exists()) return lessons;
+        File file = new File(rootPath + "webapp/data/lessons.txt");
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",", 2);
-                if (parts.length < 2) continue;
-                String lessonType = parts[0];
-                String[] lessonParts = parts[1].split(",", 6);
-                if (lessonParts.length < 6) continue;
-                String lessonId = lessonParts[0];
-                String studentName = lessonParts[1];
-                String instructorName = lessonParts[2];
-                String date = lessonParts[3];
-                String time = lessonParts[4];
-                String type = lessonParts[5];
-                if ("BeginnerLesson".equals(lessonType)) {
-                    lessons.add(new BeginnerLesson(lessonId, studentName, instructorName, date, time, type));
-                } else if ("AdvancedLesson".equals(lessonType)) {
-                    lessons.add(new AdvancedLesson(lessonId, studentName, instructorName, date, time, type));
+                String[] parts = line.split(",", -1); // -1 keeps empty fields
+
+                if (parts.length >= 8) {
+                    String type = parts[0];
+                    String lessonId = parts[1];
+                    String studentName = parts[2];
+                    String instructorName = parts[3];
+                    String date = parts[4];
+                    String time = parts[5];
+                    String lessonType = parts[6];
+                    String status = parts.length > 7 ? parts[7] : "PENDING"; // Default status
+
+                    Lesson lesson = type.equals("BeginnerLesson")
+                            ? new BeginnerLesson(lessonId, studentName, instructorName, date, time, lessonType, status)
+                            : new AdvancedLesson(lessonId, studentName, instructorName, date, time, lessonType, status);
+
+                    lessons.add(lesson);
                 }
             }
         }
         return lessons;
+    }
+
+    private static Lesson createLessonFromParts(String lessonType, String[] parts) {
+        String lessonId = parts[0];
+        String studentName = parts[1];
+        String instructorName = parts[2];
+        String date = parts[3];
+        String time = parts[4];
+        String type = parts[5];
+        String status = parts[6];
+
+        if ("BeginnerLesson".equals(lessonType)) {
+            return new BeginnerLesson(lessonId, studentName, instructorName,
+                    date, time, type, status);
+        } else if ("AdvancedLesson".equals(lessonType)) {
+            return new AdvancedLesson(lessonId, studentName, instructorName,
+                    date, time, type, status);
+        }
+        return null;
     }
 
     public static void writeLessons(List<Lesson> lessons, String rootPath) throws IOException {
@@ -201,8 +221,7 @@ public class FileHandler {
         file.getParentFile().mkdirs();
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             for (Lesson lesson : lessons) {
-                String lessonType = (lesson instanceof BeginnerLesson) ? "BeginnerLesson" :
-                        (lesson instanceof AdvancedLesson) ? "AdvancedLesson" : "Lesson";
+                String lessonType = lesson instanceof BeginnerLesson ? "BeginnerLesson" : "AdvancedLesson";
                 writer.write(lessonType + "," + lesson.toFileString());
                 writer.newLine();
             }
