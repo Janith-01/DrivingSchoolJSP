@@ -2,11 +2,16 @@ package com.servlet;
 
 import com.Model.*;
 import com.Util.FileHandler;
-import jakarta.servlet.*;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @WebServlet("/lesson")
@@ -18,276 +23,193 @@ public class LessonServlet extends HttpServlet {
         try {
             String rootPath = getServletContext().getRealPath("/");
             List<Lesson> lessons = FileHandler.readLessons(rootPath);
+            System.out.println("[LessonServlet] Initialized lessons: " + lessons.size() + " lessons");
             lessonQueue = lessons.stream()
                     .filter(l -> "PENDING".equalsIgnoreCase(l.getStatus()))
                     .collect(Collectors.toCollection(LinkedList::new));
+            System.out.println("[LessonServlet] Initialized lessonQueue: " + lessonQueue.size() + " pending lessons");
         } catch (IOException e) {
-            System.err.println("Error initializing lesson queue: " + e.getMessage());
+            System.err.println("[LessonServlet] Error initializing lesson queue: " + e.getMessage());
         }
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
         String rootPath = getServletContext().getRealPath("/");
         User user = (User) req.getSession().getAttribute("loggedInUser");
+        List<Lesson> allLessons = FileHandler.readLessons(rootPath);
+        System.out.println("[LessonServlet] All lessons: " + allLessons.size() + " lessons");
+        System.out.println("[LessonServlet] Logged-in user: " + (user != null ? user.getName() + " (isInstructor: " + (user instanceof Instructor) + ")" : "null"));
 
         if (user == null) {
+            System.out.println("[LessonServlet] No logged-in user, redirecting to login");
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
 
-        switch (action) {
-            case "instructorView":
-                handleInstructorView(req, resp, rootPath, user);
-                break;
-            case "list":
-                handleStudentView(req, resp, rootPath, user);
-                break;
-            case "edit":
-                handleEditView(req, resp, rootPath, user);
-                break;
-            case "delete":
-                handleDeleteLesson(req, resp, rootPath, user);
-                break;
-            default:
-                resp.sendRedirect(req.getContextPath() + "/login");
-        }
-    }
+        if ("list".equals(action)) {
+            List<Lesson> lessons;
+            if (user instanceof Instructor) {
+                // Filter for PENDING and ACCEPTED lessons
+                lessons = allLessons.stream()
+                        .filter(l -> l.getInstructorName().equalsIgnoreCase(user.getName()) &&
+                                ("PENDING".equalsIgnoreCase(l.getStatus()) || "ACCEPTED".equalsIgnoreCase(l.getStatus())))
+                        .collect(Collectors.toList());
+                // Load progress to identify lessons with progress
+                List<Progress> allProgress = FileHandler.readProgress(rootPath);
+                List<String> lessonsWithProgress = allProgress.stream()
+                        .map(Progress::getLessonId)
+                        .collect(Collectors.toList());
+                System.out.println("[LessonServlet] Lessons filtered for instructor '" + user.getName() + "': " + lessons.size() + " lessons (PENDING or ACCEPTED)");
+                System.out.println("[LessonServlet] Instructor lessons: " + lessons);
+                System.out.println("[LessonServlet] Lessons with progress: " + lessonsWithProgress.size());
+                req.setAttribute("instructorLessons", lessons);
+                req.setAttribute("lessonsWithProgress", lessonsWithProgress);
+                req.getRequestDispatcher("/jsp/instructorPages/pendingProgressList.jsp").forward(req, resp);
+            } else {
+                lessons = allLessons.stream()
+                        .filter(l -> l.getStudentName().equalsIgnoreCase(user.getName()))
+                        .collect(Collectors.toList());
+                System.out.println("[LessonServlet] Student lessons: " + lessons);
+                req.setAttribute("lessons", lessons);
+                req.getRequestDispatcher("/jsp/studentPages/lessonList.jsp").forward(req, resp);
+            }
+        } else if ("edit".equals(action)) {
+            String lessonId = req.getParameter("lessonId");
+            Lesson lesson = allLessons.stream()
+                    .filter(l -> l.getLessonId().equals(lessonId) && l.getStudentName().equals(user.getName()))
+                    .findFirst()
+                    .orElse(null);
+            if (lesson == null || !"PENDING".equalsIgnoreCase(lesson.getStatus())) {
+                req.setAttribute("error", "Lesson not found or cannot be edited");
+                req.getRequestDispatcher("/jsp/studentPages/lessonList.jsp").forward(req, resp);
+                return;
+            }
+            req.setAttribute("lesson", lesson);
+            req.setAttribute("instructors", FileHandler.readInstructors(rootPath));
+            req.getRequestDispatcher("/jsp/studentPages/UpdateBookingInfo.jsp").forward(req, resp);
+        } else if ("delete".equals(action)) {
+            String lessonId = req.getParameter("lessonId");
+            Lesson lesson = allLessons.stream()
+                    .filter(l -> l.getLessonId().equals(lessonId) && l.getStudentName().equals(user.getName()))
+                    .findFirst()
+                    .orElse(null);
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        String action = req.getParameter("action");
-        String rootPath = getServletContext().getRealPath("/");
-        User user = (User) req.getSession().getAttribute("loggedInUser");
+            if (lesson == null || !"PENDING".equalsIgnoreCase(lesson.getStatus())) {
+                req.setAttribute("error", "Lesson not found or cannot be deleted");
+                req.getRequestDispatcher("/jsp/studentPages/lessonList.jsp").forward(req, resp);
+                return;
+            }
 
-        if (user == null) {
-            resp.sendRedirect(req.getContextPath() + "/login");
-            return;
-        }
-
-        switch (action) {
-            case "register":
-                handleLessonRegistration(req, resp, rootPath, user);
-                break;
-            case "update":
-                handleLessonUpdate(req, resp, rootPath, user);
-                break;
-            case "ACCEPTED":
-            case "DENIED":
-                handleStatusChange(req, resp, rootPath, action);
-                break;
-            default:
-                resp.sendRedirect(req.getContextPath() + "/login");
-        }
-    }
-
-    private void handleInstructorView(HttpServletRequest req, HttpServletResponse resp,
-                                      String rootPath, User user)
-            throws ServletException, IOException {
-        if (!(user instanceof Instructor)) {
-            resp.sendRedirect(req.getContextPath() + "/login");
-            return;
-        }
-
-        Instructor instructor = (Instructor) user;
-        List<Lesson> instructorLessons = lessonQueue.stream()
-                .filter(l -> l.getInstructorName().equalsIgnoreCase(instructor.getName()))
-                .collect(Collectors.toList());
-
-        req.setAttribute("pendingLessons", instructorLessons);
-        req.getRequestDispatcher("/jsp/instructorPages/instructorHome.jsp").forward(req, resp);
-    }
-
-    private void handleStudentView(HttpServletRequest req, HttpServletResponse resp,
-                                   String rootPath, User user)
-            throws ServletException, IOException {
-        List<Lesson> allLessons = FileHandler.readLessons(rootPath);
-        List<Lesson> studentLessons = allLessons.stream()
-                .filter(l -> l.getStudentName().equalsIgnoreCase(user.getName()))
-                .collect(Collectors.toList());
-
-        req.setAttribute("lessons", studentLessons);
-        req.getRequestDispatcher("/jsp/studentPages/lessonList.jsp").forward(req, resp);
-    }
-
-    private void handleEditView(HttpServletRequest req, HttpServletResponse resp,
-                                String rootPath, User user)
-            throws ServletException, IOException {
-        String lessonId = req.getParameter("lessonId");
-        List<Lesson> allLessons = FileHandler.readLessons(rootPath);
-
-        Lesson lessonToEdit = allLessons.stream()
-                .filter(l -> l.getLessonId().equals(lessonId))
-                .findFirst()
-                .orElse(null);
-
-        if (lessonToEdit == null || !lessonToEdit.getStudentName().equals(user.getName())) {
-            req.setAttribute("error", "Lesson not found or access denied");
-            handleStudentView(req, resp, rootPath, user);
-            return;
-        }
-
-        // Check if lesson can be edited (only PENDING status)
-        if (!"PENDING".equalsIgnoreCase(lessonToEdit.getStatus())) {
-            req.setAttribute("error", "Only pending lessons can be modified");
-            handleStudentView(req, resp, rootPath, user);
-            return;
-        }
-
-        // Get available instructors for the dropdown
-        List<Instructor> instructors = FileHandler.readInstructors(rootPath).stream()
-                .filter(i -> "Available".equalsIgnoreCase(i.getAvailability()))
-                .collect(Collectors.toList());
-
-        req.setAttribute("lesson", lessonToEdit);
-        req.setAttribute("instructors", instructors);
-        req.getRequestDispatcher("/jsp/studentPages/UpdateBookingInfo.jsp").forward(req, resp);
-    }
-
-    private void handleLessonRegistration(HttpServletRequest req, HttpServletResponse resp,
-                                          String rootPath, User user)
-            throws ServletException, IOException {
-        String lessonId = UUID.randomUUID().toString();
-        String studentName = user.getName();
-        String instructorName = req.getParameter("instructorName");
-        String date = req.getParameter("date");
-        String time = req.getParameter("time");
-        String type = req.getParameter("type");
-
-        // Validate inputs
-        if (instructorName == null || date == null || time == null || type == null) {
-            req.setAttribute("error", "All fields are required");
+            allLessons.removeIf(l -> l.getLessonId().equals(lessonId));
+            lessonQueue.removeIf(l -> l.getLessonId().equals(lessonId));
+            FileHandler.writeLessons(allLessons, rootPath);
+            resp.sendRedirect(req.getContextPath() + "/lesson?action=list");
+        } else {
             req.getRequestDispatcher("/jsp/studentPages/bookingForm.jsp").forward(req, resp);
-            return;
         }
-
-        Lesson lesson;
-        if ("Beginner".equals(type)) {
-            lesson = new BeginnerLesson(lessonId, studentName, instructorName, date, time, type, "PENDING");
-        } else {
-            lesson = new AdvancedLesson(lessonId, studentName, instructorName, date, time, type, "PENDING");
-        }
-
-        lessonQueue.add(lesson);
-        List<Lesson> allLessons = FileHandler.readLessons(rootPath);
-        allLessons.add(lesson);
-        FileHandler.writeLessons(allLessons, rootPath);
-
-        resp.sendRedirect(req.getContextPath() + "/jsp/studentPages/bookingForm.jsp?success=true");
     }
 
-    private void handleLessonUpdate(HttpServletRequest req, HttpServletResponse resp,
-                                    String rootPath, User user)
-            throws ServletException, IOException {
-        String lessonId = req.getParameter("lessonId");
-        String instructorName = req.getParameter("instructorName");
-        String date = req.getParameter("date");
-        String time = req.getParameter("time");
-        String type = req.getParameter("type");
-
-        // Validate inputs
-        if (lessonId == null || instructorName == null || date == null || time == null || type == null) {
-            req.setAttribute("error", "All fields are required");
-            handleEditView(req, resp, rootPath, user);
-            return;
-        }
-
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String action = req.getParameter("action");
+        String rootPath = getServletContext().getRealPath("/");
+        User user = (User) req.getSession().getAttribute("loggedInUser");
         List<Lesson> allLessons = FileHandler.readLessons(rootPath);
-        Lesson existingLesson = allLessons.stream()
-                .filter(l -> l.getLessonId().equals(lessonId))
-                .findFirst()
-                .orElse(null);
 
-        if (existingLesson == null || !existingLesson.getStudentName().equals(user.getName())) {
-            req.setAttribute("error", "Lesson not found or access denied");
-            handleStudentView(req, resp, rootPath, user);
+        if (user == null) {
+            resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
 
-        // Check if lesson can be edited (only PENDING status)
-        if (!"PENDING".equalsIgnoreCase(existingLesson.getStatus())) {
-            req.setAttribute("error", "Only pending lessons can be modified");
-            handleStudentView(req, resp, rootPath, user);
-            return;
-        }
+        if ("register".equals(action)) {
+            String lessonId = UUID.randomUUID().toString();
+            String instructorName = req.getParameter("instructorName");
+            String date = req.getParameter("date");
+            String time = req.getParameter("time");
+            String type = req.getParameter("type");
 
-        // Create updated lesson
-        Lesson updatedLesson;
-        if ("Beginner".equals(type)) {
-            updatedLesson = new BeginnerLesson(lessonId, user.getName(), instructorName, date, time, type, existingLesson.getStatus());
-        } else {
-            updatedLesson = new AdvancedLesson(lessonId, user.getName(), instructorName, date, time, type, existingLesson.getStatus());
-        }
+            if (instructorName == null || date == null || time == null || type == null ||
+                    instructorName.trim().isEmpty() || date.trim().isEmpty() || time.trim().isEmpty() || type.trim().isEmpty()) {
+                req.setAttribute("error", "All fields are required");
+                req.getRequestDispatcher("/jsp/studentPages/bookingForm.jsp").forward(req, resp);
+                return;
+            }
 
-        // Update in all collections
-        allLessons.removeIf(l -> l.getLessonId().equals(lessonId));
-        allLessons.add(updatedLesson);
+            Lesson lesson = "Beginner".equals(type) ?
+                    new BeginnerLesson(lessonId, user.getName(), instructorName, date, time, type, "PENDING") :
+                    new AdvancedLesson(lessonId, user.getName(), instructorName, date, time, type, "PENDING");
+            lessonQueue.add(lesson);
+            allLessons.add(lesson);
+            FileHandler.writeLessons(allLessons, rootPath);
+            resp.sendRedirect(req.getContextPath() + "/jsp/studentPages/bookingForm.jsp?success=true");
+        } else if ("update".equals(action)) {
+            String lessonId = req.getParameter("lessonId");
+            String instructorName = req.getParameter("instructorName");
+            String date = req.getParameter("date");
+            String time = req.getParameter("time");
+            String type = req.getParameter("type");
 
-        lessonQueue.removeIf(l -> l.getLessonId().equals(lessonId));
-        if ("PENDING".equalsIgnoreCase(existingLesson.getStatus())) {
+            if (lessonId == null || instructorName == null || date == null || time == null || type == null) {
+                req.setAttribute("error", "All fields are required");
+                req.getRequestDispatcher("/jsp/studentPages/UpdateBookingInfo.jsp").forward(req, resp);
+                return;
+            }
+
+            Lesson existingLesson = allLessons.stream()
+                    .filter(l -> l.getLessonId().equals(lessonId) && l.getStudentName().equals(user.getName()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (existingLesson == null || !"PENDING".equalsIgnoreCase(existingLesson.getStatus())) {
+                req.setAttribute("error", "Lesson not found or cannot be updated");
+                req.getRequestDispatcher("/jsp/studentPages/lessonList.jsp").forward(req, resp);
+                return;
+            }
+
+            Lesson updatedLesson = "Beginner".equals(type) ?
+                    new BeginnerLesson(lessonId, user.getName(), instructorName, date, time, type, "PENDING") :
+                    new AdvancedLesson(lessonId, user.getName(), instructorName, date, time, type, "PENDING");
+
+            allLessons.removeIf(l -> l.getLessonId().equals(lessonId));
+            lessonQueue.removeIf(l -> l.getLessonId().equals(lessonId));
+            allLessons.add(updatedLesson);
             lessonQueue.add(updatedLesson);
+            FileHandler.writeLessons(allLessons, rootPath);
+            resp.sendRedirect(req.getContextPath() + "/lesson?action=list");
+        } else if ("delete".equals(action)) {
+            String lessonId = req.getParameter("lessonId");
+            Lesson lesson = allLessons.stream()
+                    .filter(l -> l.getLessonId().equals(lessonId) && l.getStudentName().equals(user.getName()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (lesson == null || !"PENDING".equalsIgnoreCase(lesson.getStatus())) {
+                req.setAttribute("error", "Lesson not found or cannot be deleted");
+                req.getRequestDispatcher("/jsp/studentPages/lessonList.jsp").forward(req, resp);
+                return;
+            }
+
+            allLessons.removeIf(l -> l.getLessonId().equals(lessonId));
+            lessonQueue.removeIf(l -> l.getLessonId().equals(lessonId));
+            FileHandler.writeLessons(allLessons, rootPath);
+            resp.sendRedirect(req.getContextPath() + "/lesson?action=list");
+        } else if ("ACCEPTED".equals(action) || "DENIED".equals(action)) {
+            if (!(user instanceof Instructor)) {
+                resp.sendRedirect(req.getContextPath() + "/login");
+                return;
+            }
+            String lessonId = req.getParameter("lessonId");
+            allLessons.stream()
+                    .filter(l -> l.getLessonId().equals(lessonId))
+                    .findFirst()
+                    .ifPresent(l -> {
+                        l.setStatus(action);
+                        lessonQueue.removeIf(lesson -> lesson.getLessonId().equals(lessonId));
+                    });
+            FileHandler.writeLessons(allLessons, rootPath);
+            resp.sendRedirect(req.getContextPath() + "/lesson?action=list");
         }
-
-        FileHandler.writeLessons(allLessons, rootPath);
-
-        req.setAttribute("successMessage", "Lesson successfully updated");
-        handleStudentView(req, resp, rootPath, user);
-    }
-
-    private void handleDeleteLesson(HttpServletRequest req, HttpServletResponse resp,
-                                    String rootPath, User user)
-            throws ServletException, IOException {
-        String lessonId = req.getParameter("lessonId");
-        List<Lesson> allLessons = FileHandler.readLessons(rootPath);
-
-        Lesson lessonToDelete = allLessons.stream()
-                .filter(l -> l.getLessonId().equals(lessonId))
-                .findFirst()
-                .orElse(null);
-
-        if (lessonToDelete == null || !lessonToDelete.getStudentName().equals(user.getName())) {
-            req.setAttribute("error", "Lesson not found or access denied");
-            handleStudentView(req, resp, rootPath, user);
-            return;
-        }
-
-        // Check if lesson can be deleted (only PENDING status)
-        if (!"PENDING".equalsIgnoreCase(lessonToDelete.getStatus())) {
-            req.setAttribute("error", "Only pending lessons can be deleted");
-            handleStudentView(req, resp, rootPath, user);
-            return;
-        }
-
-        // Remove from all collections
-        allLessons.removeIf(l -> l.getLessonId().equals(lessonId));
-        lessonQueue.removeIf(l -> l.getLessonId().equals(lessonId));
-
-        FileHandler.writeLessons(allLessons, rootPath);
-
-        req.setAttribute("successMessage", "Lesson successfully deleted");
-        handleStudentView(req, resp, rootPath, user);
-    }
-
-
-    private void handleStatusChange(HttpServletRequest req, HttpServletResponse resp,
-                                    String rootPath, String action)
-            throws IOException {
-        String lessonId = req.getParameter("lessonId");
-        String newStatus = "ACCEPTED".equals(action) ? "ACCEPTED" : "DENIED";
-
-        List<Lesson> allLessons = FileHandler.readLessons(rootPath);
-        allLessons.stream()
-                .filter(l -> l.getLessonId().equals(lessonId))
-                .findFirst()
-                .ifPresent(lesson -> {
-                    lesson.setStatus(newStatus);
-                    lessonQueue.removeIf(l -> l.getLessonId().equals(lessonId));
-                });
-
-        FileHandler.writeLessons(allLessons, rootPath);
-        resp.sendRedirect(req.getContextPath() + "/lesson?action=instructorView");
     }
 }

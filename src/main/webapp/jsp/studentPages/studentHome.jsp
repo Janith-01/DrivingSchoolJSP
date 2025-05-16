@@ -1,127 +1,226 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="com.Model.User" %>
-<%@ page import="com.Model.Student" %>
+<%@ page import="com.Model.Lesson" %>
+<%@ page import="com.Model.Progress" %>
+<%@ page import="com.Model.Instructor" %>
+<%@ page import="com.Util.FileHandler" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.stream.Collectors" %>
+<%@ page import="java.time.LocalDate" %>
+<%@ page import="java.time.LocalTime" %>
+<%@ page import="java.time.format.DateTimeFormatter" %>
+<!DOCTYPE html>
 <html>
 <head>
-    <title>Student Dashboard - Driving School</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="<%= request.getContextPath() %>/css/styles.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Student Dashboard</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons (client-side rendering via script) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
 </head>
-<body class="bg-gray-100">
-<%
-    User loggedInUser = (User) session.getAttribute("loggedInUser");
-    if (loggedInUser == null || !(loggedInUser instanceof Student)) {
-        response.sendRedirect(request.getContextPath() + "/login");
-        return;
-    }
-%>
-<!-- Include Navigation Bar -->
-<%@ include file="/jsp/studentPages/studentNavbar.jsp" %>
-
-<div class="container mx-auto p-6">
-    <div class="bg-white shadow-lg rounded-lg p-8 max-w-4xl mx-auto">
-        <h2 class="text-4xl font-bold text-gray-800 mb-6">Welcome, <%= loggedInUser.getName() %>!</h2>
-        <p class="text-lg text-gray-600 mb-8">You are logged in as a <span class="font-semibold text-blue-500">Student</span>. Book and manage your driving lessons from this dashboard.</p>
-
-        <!-- User Details Section -->
-        <div class="mb-8 bg-blue-50 p-6 rounded-lg border border-blue-200">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">Your Profile</h3>
-            <div id="userDetails" class="text-gray-700"></div>
-        </div>
-
-        <!-- Quick Actions Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <a href="<%= request.getContextPath() %>/instructor?action=studentList" class="bg-purple-500 text-white p-6 rounded-lg shadow-md hover:bg-purple-600 transition duration-200 flex items-center space-x-4">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v1m-10 0a3 3 0 01-5.356 1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v1m5-10a3 3 0 110-6 3 3 0 010 6z"></path></svg>
-                <div>
-                    <h4 class="text-lg font-semibold">View Instructors</h4>
-                    <p class="text-sm">Browse available driving instructors.</p>
-                </div>
-            </a>
-            <a href="<%= request.getContextPath() %>/lesson?action=list" class="bg-blue-500 text-white p-6 rounded-lg shadow-md hover:bg-blue-600 transition duration-200 flex items-center space-x-4">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                <div>
-                    <h4 class="text-lg font-semibold">View Lessons</h4>
-                    <p class="text-sm">Check your scheduled driving lessons.</p>
-                </div>
-            </a>
-            <a href="<%= request.getContextPath() %>/user?action=edit&id=<%= loggedInUser.getId() %>" class="bg-gray-500 text-white p Fingerprint: 1a2b3c4d5e6f7g8h9i0j
-                    p-6 rounded-lg shadow-md hover:bg-gray-600 transition duration-200 flex items-center space-x-4">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                <div>
-                    <h4 class="text-lg font-semibold">View/Edit Profile</h4>
-                    <p class="text-sm">Update your personal details.</p>
-                </div>
-            </a>
-        </div>
-    </div>
-</div>
-
-<script>
-    // Save user ID to localStorage on page load
-    const userId = '<%= ((User) session.getAttribute("loggedInUser")).getId() %>';
-    localStorage.setItem('userId', userId);
-    console.log('Stored userId in localStorage:', userId);
-
-    // Fetch user details from server
-    function fetchUserDetails() {
-        const storedUserId = localStorage.getItem('userId');
-        if (!storedUserId) {
-            document.getElementById('userDetails').innerHTML = 'User ID not found in local storage.';
-            console.error('No userId found in localStorage');
+<body class="bg-gray-50 min-h-screen">
+    <%
+        // Check logged-in user
+        User user = (User) session.getAttribute("loggedInUser");
+        if (user == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
+        if (user instanceof com.Model.Instructor) {
+            response.sendRedirect(request.getContextPath() + "/jsp/instructorPages/instructorHome.jsp");
+            return;
+        }
+        String studentName = user.getName();
+        String rootPath = getServletContext().getRealPath("/");
 
-        console.log('Fetching user details for userId:', storedUserId);
-        fetch('<%= request.getContextPath() %>/user?action=getById&id=' + encodeURIComponent(storedUserId))
-            .then(response => {
-                console.log('Fetch response status:', response.status);
-                if (!response.ok) {
-                    throw new Error('User not found: ' + response.status);
-                }
-                return response.json();
-            })
-            .then(user => {
-                console.log('Raw user data from fetch:', user);
-                const userDetailsDiv = document.getElementById('userDetails');
-                if (!userDetailsDiv) {
-                    console.error('userDetails div not found in DOM');
-                    return;
-                }
+        // Fetch lessons and progress
+        List<Lesson> allLessons = FileHandler.readLessons(rootPath);
+        List<Progress> allProgress = FileHandler.readProgress(rootPath);
+        List<Instructor> instructors = FileHandler.readInstructors(rootPath);
 
-                // Handle null, undefined, or empty strings
-                const email = user.email && user.email.trim() !== '' ? user.email : 'Not available';
-                const phone = user.phone && user.phone.trim() !== '' ? user.phone : 'Not available';
-                const role = user.role && user.role.trim() !== '' ? user.role : 'Not available';
-                const certification = user.certification && user.certification.trim() !== '' ? user.certification : null;
+        // Filter lessons for the student
+        List<Lesson> studentLessons = allLessons.stream()
+                .filter(l -> l.getStudentName().equalsIgnoreCase(studentName))
+                .collect(Collectors.toList());
 
-                console.log('Processed user data:', { email, phone, role, certification });
+        // Calculate progress
+        int completedLessons = (int) allProgress.stream()
+                .filter(p -> p.getStudentName().equalsIgnoreCase(studentName))
+                .count();
+        int totalLessons = studentLessons.size();
+        double progress = (totalLessons > 0) ? ((double) completedLessons / totalLessons) * 100 : 0;
 
-                // Build HTML with string concatenation
-                let html = '';
-                html += '<p><strong>Email:</strong> ' + email + '</p>';
-                html += '<p><strong>Phone:</strong> ' + phone + '</p>';
-                html += '<p><strong>Role:</strong> ' + role + '</p>';
-                if (certification) {
-                    html += '<p><strong>Certification:</strong> ' + certification + '</p>';
-                }
+        // Find next lesson (earliest PENDING or ACCEPTED)
+        Lesson nextLesson = studentLessons.stream()
+                .filter(l -> "PENDING".equalsIgnoreCase(l.getStatus()) || "ACCEPTED".equalsIgnoreCase(l.getStatus()))
+                .sorted((l1, l2) -> {
+                    LocalDate date1 = LocalDate.parse(l1.getDate(), DateTimeFormatter.ISO_LOCAL_DATE);
+                    LocalDate date2 = LocalDate.parse(l2.getDate(), DateTimeFormatter.ISO_LOCAL_DATE);
+                    LocalTime time1 = LocalTime.parse(l1.getTime(), DateTimeFormatter.ofPattern("HH:mm"));
+                    LocalTime time2 = LocalTime.parse(l2.getTime(), DateTimeFormatter.ofPattern("HH:mm"));
+                    return date1.atTime(time1).compareTo(date2.atTime(time2));
+                })
+                .findFirst()
+                .orElse(null);
+    %>
+<%@ include file="studentNavbar.jsp" %>
+    <!-- Main Content -->
+    <main class="pt-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div class="py-8">
+            <!-- Welcome Section -->
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Welcome back, <%= studentName %>!</h1>
+                    <p class="mt-2 text-gray-600">Ready for your next driving lesson?</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="<%= request.getContextPath() %>/lesson" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                        <i data-lucide="calendar" class="w-5 h-5 mr-2"></i>
+                        Book Lesson
+                    </a>
+                    <button class="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full">
+                        <i data-lucide="bell" class="w-6 h-6"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                </div>
+            </div>
 
-                console.log('Generated HTML:', html);
+            <!-- Grid Layout: Next Lesson and Progress Card -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Next Lesson -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Next Lesson</h2>
+                        <% if (nextLesson != null) { %>
+                            <p class="text-gray-600">Date: <%= nextLesson.getDate() %></p>
+                            <p class="text-gray-600">Time: <%= nextLesson.getTime() %></p>
+                            <p class="text-gray-600">Instructor: <%= nextLesson.getInstructorName() %></p>
+                            <p class="text-gray-600">Type: <%= nextLesson.getType() %></p>
+                            <p class="text-gray-600">Status: <%= nextLesson.getStatus() %></p>
+                            <div class="mt-4">
+                                <a href="<%= request.getContextPath() %>/lesson?action=edit&lessonId=<%= nextLesson.getLessonId() %>" class="text-blue-600 hover:underline">Edit</a>
+                                <span class="mx-2">|</span>
+                                <a href="<%= request.getContextPath() %>/lesson?action=delete&lessonId=<%= nextLesson.getLessonId() %>" class="text-red-600 hover:underline">Delete</a>
+                            </div>
+                        <% } else { %>
+                            <p class="text-gray-600">No upcoming lessons scheduled.</p>
+                            <div class="mt-4">
+                                <a href="<%= request.getContextPath() %>/lesson" class="text-blue-600 hover:underline">Book a Lesson</a>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
 
-                userDetailsDiv.innerHTML = html;
-                console.log('Updated userDetails div with:', userDetailsDiv.innerHTML);
-            })
-            .catch(error => {
-                console.error('Error fetching user details:', error);
-                const userDetailsDiv = document.getElementById('userDetails');
-                if (userDetailsDiv) {
-                    userDetailsDiv.innerHTML = 'Error fetching user details: ' + error.message;
-                }
-            });
-    }
+                <!-- Progress Card -->
+                <div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Your Progress</h2>
+                        <p class="text-gray-600">Lessons Completed: <%= completedLessons %> / <%= totalLessons %></p>
+                        <div class="mt-4">
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="bg-blue-600 h-4 rounded-full" style="width: <%= progress %>%"></div>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-600"><%= String.format("%.0f", progress) %>% Complete</p>
+                        </div>
+                        <div class="mt-4">
+                            <a href="<%= request.getContextPath() %>/progress?action=studentProgress" class="text-blue-600 hover:underline">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    // Use DOMContentLoaded to ensure DOM is ready
-    document.addEventListener('DOMContentLoaded', fetchUserDetails);
-</script>
+            <!-- Grid Layout: Learning Path and Quick Booking -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Learning Path -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Your Learning Path</h2>
+                        <ul class="space-y-4">
+                            <%
+                                for (Lesson lesson : studentLessons) {
+                                    boolean isCompleted = allProgress.stream()
+                                            .anyMatch(p -> p.getLessonId().equals(lesson.getLessonId()));
+                                    String icon = isCompleted ? "check-circle" :
+                                                 "ACCEPTED".equalsIgnoreCase(lesson.getStatus()) ? "play-circle" : "circle";
+                                    String iconColor = isCompleted ? "text-green-500" :
+                                                      "ACCEPTED".equalsIgnoreCase(lesson.getStatus()) ? "text-blue-500" : "text-gray-400";
+                                    String status = isCompleted ? "Completed" :
+                                                   "ACCEPTED".equalsIgnoreCase(lesson.getStatus()) ? "In Progress" :
+                                                   "Pending";
+                            %>
+                                <li class="flex items-center">
+                                    <i data-lucide="<%= icon %>" class="<%= iconColor %> w-5 h-5 mr-2"></i>
+                                    <span><%= lesson.getType() %> Lesson on <%= lesson.getDate() %> - <%= status %></span>
+                                </li>
+                            <% } %>
+                            <% if (studentLessons.isEmpty()) { %>
+                                <li class="text-gray-600">No lessons in your learning path yet.</li>
+                            <% } %>
+                        </ul>
+                        <div class="mt-4">
+                            <a href="<%= request.getContextPath() %>/lesson?action=list" class="text-blue-600 hover:underline">View All Lessons</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Booking -->
+                <div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Quick Booking</h2>
+                        <form action="<%= request.getContextPath() %>/lesson" method="post">
+                            <input type="hidden" name="action" value="register">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm text-gray-600">Preferred Date</label>
+                                    <input type="date" name="date" class="w-full p-2 border rounded-lg" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600">Preferred Time</label>
+                                    <input type="time" name="time" class="w-full p-2 border rounded-lg" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600">Instructor</label>
+                                    <select name="instructorName" class="w-full p-2 border rounded-lg" required>
+                                        <option value="">Select Instructor</option>
+                                        <% for (Instructor instructor : instructors) { %>
+                                            <option value="<%= instructor.getName() %>"><%= instructor.getName() %></option>
+                                        <% } %>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600">Lesson Type</label>
+                                    <select name="type" class="w-full p-2 border rounded-lg" required>
+                                        <option value="Beginner">Beginner</option>
+                                        <option value="Advanced">Advanced</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                    Book Lesson
+                                </button>
+                            </div>
+                        </form>
+                        <%
+                            String success = request.getParameter("success");
+                            if ("true".equals(success)) {
+                        %>
+                            <p class="mt-4 text-green-600">Lesson booked successfully!</p>
+                        <% } %>
+                        <%
+                            String error = (String) request.getAttribute("error");
+                            if (error != null) {
+                        %>
+                            <p class="mt-4 text-red-600"><%= error %></p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 </body>
 </html>

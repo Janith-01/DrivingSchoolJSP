@@ -15,6 +15,7 @@ public class FileHandler {
     private static final String LESSONS_FILE = "webapp/data/lessons.txt";
     private static final String PAYMENTS_FILE = "webapp/data/payments.txt";
     private static final String INVOICES_FILE = "webapp/data/invoices.txt";
+    private static final String PROGRESS_FILE = "webapp/data/progress.txt";
 
     public static List<User> readAllUsersAndInstructors(String rootPath) throws IOException {
         List<User> allUsers = new ArrayList<>();
@@ -306,6 +307,45 @@ public class FileHandler {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             for (Invoice invoice : invoices) {
                 writer.write(invoice.toFileString());
+    public static List<Progress> readProgress(String rootPath) throws IOException {
+        List<Progress> progressList = new ArrayList<>();
+        File file = new File(rootPath + PROGRESS_FILE);
+        if (!file.exists()) return progressList;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",", -1);
+                if (parts.length >= 7) {
+                    String progressId = parts[0];
+                    String lessonId = parts[1];
+                    String studentName = parts[2];
+                    String instructorName = parts[3];
+                    int score = Integer.parseInt(parts[4]);
+                    String remarks = parts[5];
+                    String date = parts[6];
+                    // Determine lesson type from lessons.txt
+                    List<Lesson> lessons = readLessons(rootPath);
+                    Lesson lesson = lessons.stream()
+                            .filter(l -> l.getLessonId().equals(lessonId))
+                            .findFirst()
+                            .orElse(null);
+                    Progress progress = lesson instanceof BeginnerLesson
+                            ? new Progress.BeginnerProgress(progressId, lessonId, studentName, instructorName, score, remarks, date)
+                            : new Progress.AdvancedProgress(progressId, lessonId, studentName, instructorName, score, remarks, date);
+                    progressList.add(progress);
+                }
+            }
+        }
+        return progressList;
+    }
+
+    public static void writeProgress(List<Progress> progressList, String rootPath) throws IOException {
+        File file = new File(rootPath + PROGRESS_FILE);
+        file.getParentFile().mkdirs();
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            for (Progress progress : progressList) {
+                writer.write(progress.toFileString());
                 writer.newLine();
             }
         }

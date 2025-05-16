@@ -55,7 +55,7 @@
         </form>
         <div class="mt-6 text-center">
             <p class="text-sm text-gray-600">Don't have an account?</p>
-            <a href="user" class="text-blue-500 hover:underline">Create a student account</a><br>
+            <a href="register.jsp" class="text-blue-500 hover:underline">Create a student account</a><br>
         </div>
     </div>
 </div>

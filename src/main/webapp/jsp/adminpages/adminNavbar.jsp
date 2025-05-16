@@ -1,4 +1,3 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <nav class="bg-blue-600 text-white shadow-md">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
         <a href="<%= request.getContextPath() %>/adminHome.jsp" class="text-xl font-bold">Driving School Admin</a>

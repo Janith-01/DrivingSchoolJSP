@@ -2,8 +2,15 @@
 <html>
 <head>
     <title>Register Student - Driving School</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="<%= request.getContextPath() %>/css/styles.css" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
     <style>
         .toast {
             visibility: hidden;
@@ -34,11 +41,11 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-r from-blue-100 to-gray-100 min-h-screen">
+<body class="bg-gray-50 min-h-screen flex items-center">
 <div class="container mx-auto px-4 py-6">
     <div class="max-w-md mx-auto bg-white shadow-xl rounded-lg p-8">
-        <h2 class="text-3xl font-bold text-gray-800 text-center mb-6">Register as a Student</h2>
-        <form action="user" method="post" class="space-y-6">
+        <h2 class="text-3xl font-bold text-gray-900 text-center mb-6">Register as a Student</h2>
+        <form action="<%= request.getContextPath() %>/user" method="post" class="space-y-6">
             <input type="hidden" name="action" value="register">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Name</label>
@@ -57,19 +64,24 @@
                 <input type="text" name="phone" required class="mt-1 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
             </div>
             <div class="flex justify-between items-center">
-                <button type="submit" class="bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600 transition duration-200">Register</button>
-                <a href="login" class="bg-gray-500 text-white py-2 px-6 rounded-md hover:bg-gray-600 transition duration-200">Back to Login</a>
+                <button type="submit" class="bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600 transition duration-200 flex items-center">
+                    <i data-lucide="user-plus" class="w-5 h-5 mr-2"></i>
+                    Register
+                </button>
+                <a href="<%= request.getContextPath() %>/login" class="bg-gray-500 text-white py-2 px-6 rounded-md hover:bg-gray-600 transition duration-200 flex items-center">
+                    <i data-lucide="log-in" class="w-5 h-5 mr-2"></i>
+                    Back to Login
+                </a>
             </div>
         </form>
         <div class="mt-6 text-center">
-            <p class="text-sm text-gray-600">Already have an account? <a href="login" class="text-blue-500 hover:underline">Log in</a></p>
+            <p class="text-sm text-gray-600">Already have an account? <a href="<%= request.getContextPath() %>/login" class="text-blue-500 hover:underline">Log in</a></p>
         </div>
     </div>
 </div>
 <!-- Toast Notification -->
 <div id="toast" class="toast"></div>
 <script>
-    // Show toast for error messages
     window.onload = function() {
         const toast = document.getElementById('toast');
         <% if (request.getAttribute("error") != null) { %>
