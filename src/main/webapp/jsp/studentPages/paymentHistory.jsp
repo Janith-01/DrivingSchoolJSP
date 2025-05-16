@@ -40,10 +40,20 @@
                 if (payments == null) {
                     payments = new java.util.ArrayList<>();
                 }
+                Double pendingDues = (Double) request.getAttribute("pendingDues");
+                if (pendingDues == null) {
+                    pendingDues = 0.0;
+                }
             %>
 
             <!-- Content -->
             <div class="p-6">
+                <!-- Pending Dues -->
+                <div class="mb-6 bg-gray-50 p-4 rounded-lg">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-2">Pending Dues</h2>
+                    <p class="text-gray-700">Total Pending: <span class="font-semibold text-red-600">$<%= String.format("%.2f", pendingDues) %></span></p>
+                </div>
+
                 <% if (payments.isEmpty()) { %>
                     <div class="text-center py-12">
                         <i class="fas fa-receipt text-4xl text-gray-300 mb-4"></i>
@@ -73,7 +83,7 @@
                                     <option value="all">All Statuses</option>
                                     <option value="completed">Completed</option>
                                     <option value="pending">Pending</option>
-                                    <option value="failed">Failed</option>
+                                    <option value="denied">Denied</option>
                                 </select>
                             </div>
                         </div>
@@ -98,11 +108,11 @@
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%= payment.getPaymentId() %></td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$<%= String.format("%.2f", payment.getAmount()) %></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.getPaymentDate().toString() %></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.getPaymentDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) %></td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                                <%= payment.getStatus().equalsIgnoreCase("completed") ? "bg-green-100 text-green-800" :
-                                                   payment.getStatus().equalsIgnoreCase("pending") ? "bg-yellow-100 text-yellow-800" :
+                                                <%= payment.getStatus().equalsIgnoreCase("Completed") ? "bg-green-100 text-green-800" :
+                                                   payment.getStatus().equalsIgnoreCase("Pending") ? "bg-yellow-100 text-yellow-800" :
                                                    "bg-red-100 text-red-800" %>">
                                                 <%= payment.getStatus() %>
                                             </span>
@@ -120,11 +130,8 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3">
-                                                <i class="fas fa-receipt"></i>
-                                            </a>
-                                            <a href="#" class="text-indigo-600 hover:text-indigo-900">
-                                                <i class="fas fa-download"></i>
+                                            <a href="${pageContext.request.contextPath}/payment?action=generateInvoice&paymentId=<%= payment.getPaymentId() %>" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                                                <i class="fas fa-receipt"></i> View Invoice
                                             </a>
                                         </td>
                                     </tr>
@@ -153,8 +160,7 @@
     </div>
 
     <script>
-        // Simple filtering functionality (would need to be connected to actual data)
-        document.getElementById('statusFilter').addEventListener('change', function() {
+        document.getElementById('statusFilter')?.addEventListener('change', function() {
             const status = this.value;
             const rows = document.querySelectorAll('tbody tr');
 
@@ -168,12 +174,28 @@
             });
         });
 
-        // Date filtering (would need proper implementation)
-        document.getElementById('dateFrom').addEventListener('change', filterByDate);
-        document.getElementById('dateTo').addEventListener('change', filterByDate);
+        document.getElementById('dateFrom')?.addEventListener('change', filterByDate);
+        document.getElementById('dateTo')?.addEventListener('change', filterByDate);
 
         function filterByDate() {
-            // Implementation would compare dates and show/hide rows
+            const fromDate = document.getElementById('dateFrom').value;
+            const toDate = document.getElementById('dateTo').value;
+            const rows = document.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const dateCell = row.querySelector('td:nth-child(3)').textContent;
+                const rowDate = new Date(dateCell);
+            
+                let showRow = true;
+                if (fromDate && new Date(fromDate) > rowDate) {
+                    showRow = false;
+                }
+                if (toDate && new Date(toDate) < rowDate) {
+                    showRow = false; 
+                }
+            
+                row.style.display = showRow ? '' : 'none';
+            });
         }
     </script>
 </body>

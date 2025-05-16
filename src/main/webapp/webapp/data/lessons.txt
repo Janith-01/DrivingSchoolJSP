@@ -1,4 +1,9 @@
 BeginnerLesson,5aa5e5c8-3fe8-4efe-9190-de5196e82746,adeesha1,sumudu,2025-05-17,15:25,Beginner,DENIED
 AdvancedLesson,d57a6825-5b18-492b-9aa2-55d28bd4abf5,adeesha1,sumudu,2025-05-16,15:25,Advanced,DENIED
-BeginnerLesson,14def3e3-0648-4f9c-b2b3-e7e014bbcc57,adeesha1,sumudu,2025-05-30,15:25,Beginner,ACCEPTED
-BeginnerLesson,aaabfeb8-7821-408b-8626-bf94967e0296,adeesha1,sumudu,2025-05-19,09:25,Beginner,PENDING
+BeginnerLesson,14def3e3-0648-4f9c-b2b3-e7e014bbcc57,adeesha1,sumudu,2025-05-30,15:25,Beginner,PAID
+BeginnerLesson,aaabfeb8-7821-408b-8626-bf94967e0296,adeesha1,sumudu,2025-05-19,09:25,Beginner,PAID
+AdvancedLesson,23f9a827-6480-4a0e-934a-69fec5224574,adeesha1,Janith viranga,2025-05-19,15:25,Advanced,PAID
+BeginnerLesson,69e8c390-1e2e-4b82-b876-92a69929ca55,adeesha1,Janith viranga,2025-05-17,09:25,Beginner,PAID
+BeginnerLesson,40a7f67e-03e1-4596-b89b-04007308a948,adeesha1,sumudu,2025-05-19,15:25,Beginner,PAID
+BeginnerLesson,94e2b7e3-4dfc-4a11-9a05-405c608c267d,adeesha1,Janith viranga,2025-05-23,14:30,Beginner,PAID
+BeginnerLesson,1ff1a9f4-6c25-45fc-8498-7e2aee285ac0,adeesha1,sumudu,2025-05-20,14:30,Beginner,PAID

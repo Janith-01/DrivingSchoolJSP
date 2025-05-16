@@ -2,6 +2,9 @@ package com.Util;
 
 import com.Model.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +14,7 @@ public class FileHandler {
     private static final String INSTRUCTOR_FILE_PATH = "webapp/data/instructors.txt";
     private static final String LESSONS_FILE = "webapp/data/lessons.txt";
     private static final String PAYMENTS_FILE = "webapp/data/payments.txt";
+    private static final String INVOICES_FILE = "webapp/data/invoices.txt";
 
     public static List<User> readAllUsersAndInstructors(String rootPath) throws IOException {
         List<User> allUsers = new ArrayList<>();
@@ -23,7 +27,6 @@ public class FileHandler {
         List<User> users = new ArrayList<>();
         File file = new File(rootPath + USER_FILE_PATH);
 
-        // Initialize with admin user if file doesn't exist or is empty
         if (!file.exists() || file.length() == 0) {
             initializeAdminUser(rootPath);
         }
@@ -44,7 +47,7 @@ public class FileHandler {
                         user = new Admin(id, name, email, password, phone);
                     } else {
                         user = new Student(id, name, email, password, phone);
-                        user.setRole(role); // Set role for Student (default or custom)
+                        user.setRole(role);
                     }
                     users.add(user);
                 }
@@ -58,7 +61,7 @@ public class FileHandler {
         file.getParentFile().mkdirs();
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             for (User user : users) {
-                if (user instanceof Student || user instanceof Admin) { // Write Student and Admin objects
+                if (user instanceof Student || user instanceof Admin) {
                     writer.write(String.format("%s,%s,%s,%s,%s,%s",
                             user.getId(),
                             user.getName() != null ? user.getName() : "",
@@ -76,7 +79,6 @@ public class FileHandler {
         File file = new File(rootPath + USER_FILE_PATH);
         List<User> users = new ArrayList<>();
 
-        // Read existing users without calling readUsers to avoid recursion
         if (file.exists() && file.length() > 0) {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 String line;
@@ -102,7 +104,6 @@ public class FileHandler {
             }
         }
 
-        // Check if admin already exists
         boolean adminExists = users.stream().anyMatch(u -> "admin@drivingschool.com".equals(u.getEmail()));
         if (!adminExists) {
             User admin = new Admin("admin-001", "Admin User", "admin@drivingschool.com", "admin123", "555-123-4567");
@@ -171,12 +172,12 @@ public class FileHandler {
 
     public static List<Lesson> readLessons(String rootPath) throws IOException {
         List<Lesson> lessons = new ArrayList<>();
-        File file = new File(rootPath + "webapp/data/lessons.txt");
+        File file = new File(rootPath + LESSONS_FILE);
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",", -1); // -1 keeps empty fields
+                String[] parts = line.split(",", -1);
 
                 if (parts.length >= 8) {
                     String type = parts[0];
@@ -186,7 +187,7 @@ public class FileHandler {
                     String date = parts[4];
                     String time = parts[5];
                     String lessonType = parts[6];
-                    String status = parts.length > 7 ? parts[7] : "PENDING"; // Default status
+                    String status = parts.length > 7 ? parts[7] : "PENDING";
 
                     Lesson lesson = type.equals("BeginnerLesson")
                             ? new BeginnerLesson(lessonId, studentName, instructorName, date, time, lessonType, status)
@@ -209,11 +210,9 @@ public class FileHandler {
         String status = parts[6];
 
         if ("BeginnerLesson".equals(lessonType)) {
-            return new BeginnerLesson(lessonId, studentName, instructorName,
-                    date, time, type, status);
+            return new BeginnerLesson(lessonId, studentName, instructorName, date, time, type, status);
         } else if ("AdvancedLesson".equals(lessonType)) {
-            return new AdvancedLesson(lessonId, studentName, instructorName,
-                    date, time, type, status);
+            return new AdvancedLesson(lessonId, studentName, instructorName, date, time, type, status);
         }
         return null;
     }
@@ -232,32 +231,24 @@ public class FileHandler {
 
     public static List<Payment> readPayments(String rootPath) throws IOException {
         List<Payment> payments = new ArrayList<>();
-        File file = new File(rootPath + PAYMENTS_FILE);
-        if (!file.exists()) return payments;
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",", 2);
-                if (parts.length < 2) continue;
-                String paymentType = parts[0];
-                String[] paymentParts = parts[1].split(",", 6);
-                if (paymentParts.length < 6) continue;
-
-                String paymentId = paymentParts[0];
-                String studentId = paymentParts[1];
-                double amount = Double.parseDouble(paymentParts[2]);
-                LocalDateTime paymentDate = LocalDateTime.parse(paymentParts[3]);
-                String status = paymentParts[4];
-                String lessonId = paymentParts[5];
-
-                if (paymentType.equals("CardPayment")) {
-                    if (paymentParts.length < 7) continue;
-                    String cardNumber = paymentParts[6];
-                    payments.add(new CardPayment(paymentId, studentId, amount, paymentDate, status, lessonId, cardNumber));
-                } else if (paymentType.equals("CashPayment")) {
-                    payments.add(new CashPayment(paymentId, studentId, amount, paymentDate, status, lessonId));
-                }
+        Path path = Paths.get(rootPath, "webapp/data/payments.txt");
+        if (!Files.exists(path)) return payments;
+        List<String> lines = Files.readAllLines(path);
+        for (String line : lines) {
+            String[] parts = line.split(",");
+            if (parts.length < 7) continue;
+            String type = parts[0];
+            String paymentId = parts[1];
+            String studentId = parts[2];
+            double amount = Double.parseDouble(parts[3]);
+            LocalDateTime paymentDate = LocalDateTime.parse(parts[4]);
+            String status = parts[5];
+            String lessonId = parts[6];
+            if ("CardPayment".equals(type) && parts.length == 8) {
+                String cardNumber = parts[7];
+                payments.add(new CardPayment(paymentId, studentId, amount, paymentDate, status, lessonId, cardNumber));
+            } else if ("CashPayment".equals(type)) {
+                payments.add(new CashPayment(paymentId, studentId, amount, paymentDate, status, lessonId));
             }
         }
         return payments;
@@ -269,6 +260,52 @@ public class FileHandler {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             for (Payment payment : payments) {
                 writer.write(payment.toFileString());
+                writer.newLine();
+            }
+        }
+    }
+
+    public static List<Invoice> readInvoices(String rootPath) throws IOException {
+        List<Invoice> invoices = new ArrayList<>();
+        Path path = Paths.get(rootPath, "webapp/data/invoices.txt");
+        if (!Files.exists(path)) return invoices;
+        List<String> lines = Files.readAllLines(path);
+        for (String line : lines) {
+            try {
+                String[] parts = line.split(",");
+                if (parts.length >= 6 && "Corporate".equals(parts[0])) {
+                    String paymentId = parts[1];
+                    String studentId = parts[2];
+                    String corporateId = parts[3];
+                    double amount = Double.parseDouble(parts[4]);
+                    LocalDateTime date = LocalDateTime.parse(parts[5]);
+                    String status = parts.length > 6 ? parts[6] : "Pending";
+                    CorporateInvoice invoice = new CorporateInvoice(studentId, paymentId, amount, date, corporateId);
+                    invoice.setStatus(status);
+                    invoices.add(invoice);
+                } else if (parts.length >= 5 && "Student".equals(parts[0])) {
+                    String paymentId = parts[1];
+                    String studentId = parts[2];
+                    double amount = Double.parseDouble(parts[3]);
+                    LocalDateTime date = LocalDateTime.parse(parts[4]);
+                    String status = parts.length > 5 ? parts[5] : "Pending";
+                    StudentInvoice invoice = new StudentInvoice(studentId, paymentId, amount, date);
+                    invoice.setStatus(status);
+                    invoices.add(invoice);
+                }
+            } catch (Exception e) {
+                System.err.println("Skipping invalid invoice line: " + line + " - " + e.getMessage());
+            }
+        }
+        return invoices;
+    }
+
+    public static void writeInvoices(List<Invoice> invoices, String rootPath) throws IOException {
+        File file = new File(rootPath + INVOICES_FILE);
+        file.getParentFile().mkdirs();
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            for (Invoice invoice : invoices) {
+                writer.write(invoice.toFileString());
                 writer.newLine();
             }
         }
