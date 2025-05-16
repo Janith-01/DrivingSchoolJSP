@@ -1,3 +1,4 @@
+
 package com.servlet;
 
 import com.Model.Student;
@@ -19,7 +20,7 @@ public class UserServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
         String rootPath = getServletContext().getRealPath("/");
-        List<User> users = FileHandler.readUsers(rootPath); // Only students
+        List<User> users = FileHandler.readUsers(rootPath);
 
         if ("list".equals(action)) {
             req.setAttribute("users", users);
@@ -56,7 +57,7 @@ public class UserServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
         String rootPath = getServletContext().getRealPath("/");
-        List<User> users = FileHandler.readUsers(rootPath); // Only students
+        List<User> users = FileHandler.readUsers(rootPath);
 
         if ("register".equals(action)) {
             String id = UUID.randomUUID().toString();
@@ -76,8 +77,7 @@ public class UserServlet extends HttpServlet {
             User user = new Student(id, name, email, password, phone);
             users.add(user);
             FileHandler.writeUsers(users, rootPath);
-            // Redirect to login with success message
-            resp.sendRedirect("login?success=registered");
+            resp.sendRedirect(req.getContextPath() + "/login?success=registered");
         } else if ("update".equals(action)) {
             String id = req.getParameter("id");
             String name = req.getParameter("name");
@@ -85,16 +85,25 @@ public class UserServlet extends HttpServlet {
             String password = req.getParameter("password");
             String phone = req.getParameter("phone");
 
+            // Validation
+            if (id == null || name == null || email == null || password == null || phone == null ||
+                    name.trim().isEmpty() || email.trim().isEmpty() || password.trim().isEmpty() || phone.trim().isEmpty()) {
+                req.setAttribute("error", "All fields are required.");
+                req.getRequestDispatcher("/jsp/common/profile.jsp").forward(req, resp);
+                return;
+            }
+
             users.removeIf(u -> u.getId().equals(id));
             User user = new Student(id, name, email, password, phone);
             users.add(user);
             FileHandler.writeUsers(users, rootPath);
-            resp.sendRedirect("/DrivingSchoolSystem/jsp/studentPages/studentHome.jsp");
+            req.setAttribute("success", "Profile updated successfully.");
+            req.getRequestDispatcher("/jsp/studentPages/studentHome.jsp").forward(req, resp);
         } else if ("delete".equals(action)) {
             String id = req.getParameter("id");
             users.removeIf(u -> u.getId().equals(id));
             FileHandler.writeUsers(users, rootPath);
-            resp.sendRedirect("user?action=list");
+            resp.sendRedirect(req.getContextPath() + "/user?action=list");
         }
     }
 }

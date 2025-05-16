@@ -1,2 +1,4 @@
 admin-001,Admin User,admin@drivingschool.com,admin123,555-123-4567,Admin
 eda8f28a-0f5d-4ee9-a71d-05f0eaa3b277,adeesha1,adeesha@gmail.com,adeesha,1234567890,Student
+926cdfa4-f9e5-4c84-99d1-987799c8c08c,janaka123,janaka@gmail.com,janaka,1234567890,Student
+39dd05c1-ca6d-4f95-ac52-80084274fb2d,janaka123,janaka@gmail.com,janaka,1234567890,Student

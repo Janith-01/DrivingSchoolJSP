@@ -68,12 +68,7 @@
                     <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
                     <p class="mt-2 text-gray-600">Manage your driving school operations</p>
                 </div>
-                <div class="flex space-x-4">
-                    <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center">
-                        <i data-lucide="settings" class="w-5 h-5 mr-2"></i>
-                        System Settings
-                    </button>
-                </div>
+
             </div>
 
             <!-- Stat Cards -->
