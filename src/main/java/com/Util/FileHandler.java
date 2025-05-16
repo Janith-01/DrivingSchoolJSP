@@ -2,6 +2,7 @@ package com.Util;
 
 import com.Model.*;
 import java.io.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,6 +10,7 @@ public class FileHandler {
     private static final String USER_FILE_PATH = "webapp/data/users.txt";
     private static final String INSTRUCTOR_FILE_PATH = "webapp/data/instructors.txt";
     private static final String LESSONS_FILE = "webapp/data/lessons.txt";
+    private static final String PAYMENTS_FILE = "webapp/data/payments.txt";
 
     public static List<User> readAllUsersAndInstructors(String rootPath) throws IOException {
         List<User> allUsers = new ArrayList<>();
@@ -223,6 +225,50 @@ public class FileHandler {
             for (Lesson lesson : lessons) {
                 String lessonType = lesson instanceof BeginnerLesson ? "BeginnerLesson" : "AdvancedLesson";
                 writer.write(lessonType + "," + lesson.toFileString());
+                writer.newLine();
+            }
+        }
+    }
+
+    public static List<Payment> readPayments(String rootPath) throws IOException {
+        List<Payment> payments = new ArrayList<>();
+        File file = new File(rootPath + PAYMENTS_FILE);
+        if (!file.exists()) return payments;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",", 2);
+                if (parts.length < 2) continue;
+                String paymentType = parts[0];
+                String[] paymentParts = parts[1].split(",", 6);
+                if (paymentParts.length < 6) continue;
+
+                String paymentId = paymentParts[0];
+                String studentId = paymentParts[1];
+                double amount = Double.parseDouble(paymentParts[2]);
+                LocalDateTime paymentDate = LocalDateTime.parse(paymentParts[3]);
+                String status = paymentParts[4];
+                String lessonId = paymentParts[5];
+
+                if (paymentType.equals("CardPayment")) {
+                    if (paymentParts.length < 7) continue;
+                    String cardNumber = paymentParts[6];
+                    payments.add(new CardPayment(paymentId, studentId, amount, paymentDate, status, lessonId, cardNumber));
+                } else if (paymentType.equals("CashPayment")) {
+                    payments.add(new CashPayment(paymentId, studentId, amount, paymentDate, status, lessonId));
+                }
+            }
+        }
+        return payments;
+    }
+
+    public static void writePayments(List<Payment> payments, String rootPath) throws IOException {
+        File file = new File(rootPath + PAYMENTS_FILE);
+        file.getParentFile().mkdirs();
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            for (Payment payment : payments) {
+                writer.write(payment.toFileString());
                 writer.newLine();
             }
         }
