@@ -1,4 +1,3 @@
-```jsp
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.Model.User" %>
 <%@ page import="com.Model.Student" %>
@@ -105,4 +104,3 @@
 </script>
 </body>
 </html>
-```

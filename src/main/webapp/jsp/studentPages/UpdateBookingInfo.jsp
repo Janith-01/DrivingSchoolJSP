@@ -26,6 +26,7 @@
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
+<%@ include file="studentNavbar.jsp" %>
     <div class="container mx-auto p-6 max-w-lg">
         <h1 class="text-2xl font-bold mb-6 text-center">Update Driving Lesson</h1>
 
