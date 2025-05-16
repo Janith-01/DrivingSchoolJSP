@@ -163,8 +163,8 @@
 
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row justify-between space-y-3 sm:space-y-0 sm:space-x-4 mt-8">
-                    <a href="${pageContext.request.contextPath}/payment?action=history&studentId=<%= studentId %>" class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <i class="fas fa-history mr-2"></i> View Payment History
+                    <a href="${pageContext.request.contextPath}/dashboard" class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
                     </a>
                     <button type="submit" class="flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <i class="fas fa-lock mr-2"></i> Pay Now
@@ -195,11 +195,10 @@
 
     <script>
         function toggleCardDetails() {
-            const paymentType = document.querySelector('input[name="paymentType"]:checked').value;
+            const paymentType = document.querySelector('input[name="paymentType"]:checked')?.value;
             const cardDetails = document.getElementById('cardDetails');
             cardDetails.classList.toggle('hidden', paymentType !== 'Card');
 
-            // Add visual feedback for card input
             const cardNumberInput = document.getElementById('cardNumber');
             if (paymentType === 'Card') {
                 cardNumberInput.classList.add('card-input');
@@ -209,20 +208,13 @@
         }
 
         function formatCardNumber(input) {
-            // Remove all non-digit characters
             let value = input.value.replace(/\D/g, '');
-
-            // Add spaces every 4 digits
             value = value.replace(/(\d{4})(?=\d)/g, '$1 ');
-
-            // Update the input value
             input.value = value;
 
-            // Detect card type and update background
             const firstDigit = value.charAt(0);
             const cardInput = document.getElementById('cardNumber');
             cardInput.classList.remove('visa');
-
             if (firstDigit === '4') {
                 cardInput.classList.add('visa');
             }
@@ -230,11 +222,9 @@
 
         function formatExpiryDate(input) {
             let value = input.value.replace(/\D/g, '');
-
             if (value.length > 2) {
                 value = value.substring(0, 2) + '/' + value.substring(2, 4);
             }
-
             input.value = value;
         }
 
@@ -255,30 +245,25 @@
             const expiryDate = document.getElementById('expiryDate')?.value;
             const cvv = document.getElementById('cvv')?.value;
 
-            // Reset error messages
             document.querySelectorAll('[id$="Error"]').forEach(el => el.textContent = "");
 
-            // Validate Lesson Selection
             if (!lessonId) {
                 document.getElementById("lessonIdError").textContent = "Please select a lesson";
                 isValid = false;
             }
 
-            // Validate Amount
             if (!amount || amount <= 0) {
                 document.getElementById("amountError").textContent = "Please enter a valid amount";
                 isValid = false;
             }
 
-            // Validate Payment Type
             if (!paymentType) {
                 document.getElementById("paymentTypeError").textContent = "Please select a payment method";
                 isValid = false;
             }
 
-            // Validate Card Details if Card Payment
             if (paymentType === 'Card') {
-                const cardDigits = cardNumber.replace(/\s+/g, '');
+                const cardDigits = cardNumber?.replace(/\s+/g, '');
                 if (!cardDigits || cardDigits.length !== 16) {
                     document.getElementById("cardNumberError").textContent = "Please enter a valid 16-digit card number";
                     isValid = false;
@@ -307,7 +292,6 @@
             return isValid;
         }
 
-        // Populate amount based on lesson type
         document.getElementById('lessonId').addEventListener('change', function() {
             const lessonId = this.value;
             const amountField = document.getElementById('amount');
@@ -316,15 +300,6 @@
                     amountField.value = <%= "Beginner".equals(lesson.getType()) ? "70.00" : "130.00" %>;
                 }
             <% } %>
-        });
-
-        // Initialize card input formatting
-        document.getElementById('cardNumber')?.addEventListener('input', function() {
-            formatCardNumber(this);
-        });
-
-        document.getElementById('expiryDate')?.addEventListener('input', function() {
-            formatExpiryDate(this);
         });
     </script>
 </body>
