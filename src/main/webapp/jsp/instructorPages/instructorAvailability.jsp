@@ -6,6 +6,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
+<%@ include file="instructorNavbar.jsp" %>
 <div class="container mx-auto p-4">
     <div class="bg-white shadow-md rounded-lg p-6 max-w-md mx-auto">
         <h2 class="text-2xl font-bold mb-4">Update Availability</h2>
