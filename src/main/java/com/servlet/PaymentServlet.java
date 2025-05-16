@@ -68,7 +68,7 @@ public class PaymentServlet extends HttpServlet {
                     .collect(Collectors.toList());
             System.out.println("Pending Cash Payments: " + pendingCashPayments);
             req.setAttribute("pendingPayments", pendingCashPayments);
-            req.getRequestDispatcher("/jsp/adminPages/paymentReq.jsp").forward(req, resp);
+            req.getRequestDispatcher("/jsp/adminpages/paymentReq.jsp").forward(req, resp);
         } else if ("generateInvoice".equals(action)) {
             if (!(user instanceof Student)) {
                 req.setAttribute("error", "Only students can generate invoices");

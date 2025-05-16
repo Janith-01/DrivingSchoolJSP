@@ -15,9 +15,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @WebServlet("/instructor")
 public class InstructorServlet extends HttpServlet {
+    private static final String EMAIL_REGEX = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
@@ -113,6 +116,7 @@ public class InstructorServlet extends HttpServlet {
             String certifications = req.getParameter("certifications");
             String type = req.getParameter("type");
 
+            // Basic validation
             if (name == null || email == null || password == null || experienceStr == null ||
                     availability == null || certifications == null || type == null ||
                     name.trim().isEmpty() || email.trim().isEmpty() || password.trim().isEmpty() ||
@@ -121,6 +125,23 @@ public class InstructorServlet extends HttpServlet {
                 req.getRequestDispatcher("/jsp/adminpages/instructorRegister.jsp").forward(req, resp);
                 return;
             }
+
+            // Email structure validation
+            if (!Pattern.matches(EMAIL_REGEX, email)) {
+                req.setAttribute("error", "Invalid email format.");
+                req.getRequestDispatcher("/jsp/adminpages/instructorRegister.jsp").forward(req, resp);
+                return;
+            }
+
+            // Check if email already exists
+            boolean emailExists = instructors.stream().anyMatch(i -> i.getEmail().equalsIgnoreCase(email));
+            if (emailExists) {
+                req.setAttribute("error", "Email already exists.");
+                req.getRequestDispatcher("/jsp/adminpages/instructorRegister.jsp").forward(req, resp);
+                return;
+            }
+
+            // Experience validation
             int experience;
             try {
                 experience = Integer.parseInt(experienceStr);
@@ -149,6 +170,13 @@ public class InstructorServlet extends HttpServlet {
             String certifications = req.getParameter("certifications");
             String type = req.getParameter("type");
 
+            // Email structure validation
+            if (!Pattern.matches(EMAIL_REGEX, email)) {
+                req.setAttribute("error", "Invalid email format.");
+                req.getRequestDispatcher("/jsp/instructorPages/instructorHome.jsp").forward(req, resp);
+                return;
+            }
+
             instructors.removeIf(i -> i.getId().equals(id));
             Instructor instructor;
             if ("PartTime".equals(type)) {
@@ -158,7 +186,7 @@ public class InstructorServlet extends HttpServlet {
             }
             instructors.add(instructor);
             FileHandler.writeInstructors(instructors, rootPath);
-            resp.sendRedirect("instructor?action=list");
+            resp.sendRedirect("/DrivingSchoolSystem/jsp/instructorPages/instructorHome.jsp");
         } else if ("updateAvailability".equals(action)) {
             String id = req.getParameter("id");
             String availability = req.getParameter("availability");
@@ -170,7 +198,7 @@ public class InstructorServlet extends HttpServlet {
                 }
             }
             FileHandler.writeInstructors(instructors, rootPath);
-            resp.sendRedirect("instructor?action=list");
+            resp.sendRedirect("/DrivingSchoolSystem/jsp/instructorPages/instructorHome.jsp");
         } else if ("delete".equals(action)) {
             String id = req.getParameter("id");
             System.out.println("Delete action called for instructor ID: " + id);

@@ -35,8 +35,7 @@
             transform: translateY(-1px);
         }
         .btn-secondary {
-            background-color: #6b7280;
-            color: white;
+            backgr
         }
         .btn-secondary:hover {
             background-color: #4b5563;
@@ -97,7 +96,7 @@
                         <p><%= request.getAttribute("error") %></p>
                     </div>
                 <% } %>
-                <form action="<%= request.getContextPath() %>/instructor" method="post" class="space-y-4">
+                <form action="<%= request.getContextPath() %>/instructor" method="post" class="space-y-4" onsubmit="return validateForm()">
                     <input type="hidden" name="action" value="register">
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
@@ -159,7 +158,7 @@
         let isValid = true;
         const fields = [
             { id: 'name', errorId: 'nameError', message: 'Name is required' },
-            { id: 'email', errorId: 'emailError', message: 'Valid email is required' },
+            Salomon Salomon Salomon { id: 'email', errorId: 'emailError', message: 'Valid email is required' },
             { id: 'password', errorId: 'passwordError', message: 'Password is required' },
             { id: 'experience', errorId: 'experienceError', message: 'Experience must be a non-negative number' },
             { id: 'availability', errorId: 'availabilityError', message: 'Please select availability' },
@@ -187,13 +186,6 @@
 
         return isValid;
     }
-
-    // Attach validation to form
-    document.querySelector('form').addEventListener('submit', function(event) {
-        if (!validateForm()) {
-            event.preventDefault();
-        }
-    });
 
     // Show toast for server-side errors
     window.onload = function() {

@@ -307,6 +307,9 @@ public class FileHandler {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             for (Invoice invoice : invoices) {
                 writer.write(invoice.toFileString());
+            }
+        }
+    }
     public static List<Progress> readProgress(String rootPath) throws IOException {
         List<Progress> progressList = new ArrayList<>();
         File file = new File(rootPath + PROGRESS_FILE);

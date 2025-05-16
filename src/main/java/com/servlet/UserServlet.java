@@ -1,4 +1,3 @@
-
 package com.servlet;
 
 import com.Model.Student;
@@ -13,9 +12,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @WebServlet("/user")
 public class UserServlet extends HttpServlet {
+    private static final String EMAIL_REGEX = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
+    private static final String PHONE_REGEX = "^\\d{10}$";
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
@@ -74,6 +77,28 @@ public class UserServlet extends HttpServlet {
                 return;
             }
 
+            // Email structure validation
+            if (!Pattern.matches(EMAIL_REGEX, email)) {
+                req.setAttribute("error", "Invalid email format.");
+                req.getRequestDispatcher("/jsp/common/register.jsp").forward(req, resp);
+                return;
+            }
+
+            // Phone number validation (10 digits)
+            if (!Pattern.matches(PHONE_REGEX, phone)) {
+                req.setAttribute("error", "Phone number must be exactly 10 digits.");
+                req.getRequestDispatcher("/jsp/common/register.jsp").forward(req, resp);
+                return;
+            }
+
+            // Check if email already exists
+            boolean emailExists = users.stream().anyMatch(u -> u.getEmail().equalsIgnoreCase(email));
+            if (emailExists) {
+                req.setAttribute("error", "Email already exists.");
+                req.getRequestDispatcher("/jsp/common/register.jsp").forward(req, resp);
+                return;
+            }
+
             User user = new Student(id, name, email, password, phone);
             users.add(user);
             FileHandler.writeUsers(users, rootPath);
@@ -89,6 +114,20 @@ public class UserServlet extends HttpServlet {
             if (id == null || name == null || email == null || password == null || phone == null ||
                     name.trim().isEmpty() || email.trim().isEmpty() || password.trim().isEmpty() || phone.trim().isEmpty()) {
                 req.setAttribute("error", "All fields are required.");
+                req.getRequestDispatcher("/jsp/common/profile.jsp").forward(req, resp);
+                return;
+            }
+
+            // Email structure validation
+            if (!Pattern.matches(EMAIL_REGEX, email)) {
+                req.setAttribute("error", "Invalid email format.");
+                req.getRequestDispatcher("/jsp/common/profile.jsp").forward(req, resp);
+                return;
+            }
+
+            // Phone number validation (10 digits)
+            if (!Pattern.matches(PHONE_REGEX, phone)) {
+                req.setAttribute("error", "Phone number must be exactly 10 digits.");
                 req.getRequestDispatcher("/jsp/common/profile.jsp").forward(req, resp);
                 return;
             }

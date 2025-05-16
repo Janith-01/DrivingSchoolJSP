@@ -39,29 +39,38 @@
             from { bottom: 30px; opacity: 1; }
             to { bottom: 0; opacity: 0; }
         }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex items-center">
 <div class="container mx-auto px-4 py-6">
     <div class="max-w-md mx-auto bg-white shadow-xl rounded-lg p-8">
         <h2 class="text-3xl font-bold text-gray-900 text-center mb-6">Register as a Student</h2>
-        <form action="<%= request.getContextPath() %>/user" method="post" class="space-y-6">
+        <form action="<%= request.getContextPath() %>/user" method="post" class="space-y-6" onsubmit="return validateForm()">
             <input type="hidden" name="action" value="register">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Name</label>
-                <input type="text" name="name" required class="mt-1 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <input type="text" id="name" name="name" required class="mt-1 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <div id="nameError" class="error-message"></div>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" name="email" required class="mt-1 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <input type="email" id="email" name="email" required class="mt-1 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <div id="emailError" class="error-message"></div>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Password</label>
-                <input type="password" name="password" required class="mt-1 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <input type="password" id="password" name="password" required class="mt-1 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <div id="passwordError" class="error-message"></div>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Phone</label>
-                <input type="text" name="phone" required class="mt-1 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <input type="text" id="phone" name="phone" required class="mt-1 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <div id="phoneError" class="error-message"></div>
             </div>
             <div class="flex justify-between items-center">
                 <button type="submit" class="bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600 transition duration-200 flex items-center">
@@ -82,6 +91,36 @@
 <!-- Toast Notification -->
 <div id="toast" class="toast"></div>
 <script>
+    function validateForm() {
+        let isValid = true;
+        const fields = [
+            { id: 'name', errorId: 'nameError', message: 'Name is required' },
+            { id: 'email', errorId: 'emailError', message: 'Valid email is required' },
+            { id: 'password', errorId: 'passwordError', message: 'Password is required' },
+            { id: 'phone', errorId: 'phoneError', message: 'Phone number must be exactly 10 digits' }
+        ];
+
+        fields.forEach(field => {
+            const input = document.getElementById(field.id);
+            const error = document.getElementById(field.errorId);
+            error.textContent = '';
+            if (!input.value.trim()) {
+                error.textContent = field.message;
+                isValid = false;
+            }
+            if (field.id === 'email' && input.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value)) {
+                error.textContent = 'Invalid email format';
+                isValid = false;
+            }
+            if (field.id === 'phone' && input.value && !/^\d{10}$/.test(input.value)) {
+                error.textContent = 'Phone number must be exactly 10 digits';
+                isValid = false;
+            }
+        });
+
+        return isValid;
+    }
+
     window.onload = function() {
         const toast = document.getElementById('toast');
         <% if (request.getAttribute("error") != null) { %>
