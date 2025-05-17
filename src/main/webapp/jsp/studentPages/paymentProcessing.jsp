@@ -23,6 +23,7 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+<%@ include file="studentNavbar.jsp" %>
     <div class="container mx-auto px-4 py-8 max-w-2xl">
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             <!-- Header -->
@@ -162,10 +163,7 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="flex flex-col sm:flex-row justify-between space-y-3 sm:space-y-0 sm:space-x-4 mt-8">
-                    <a href="${pageContext.request.contextPath}/dashboard" class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
-                    </a>
+                <div class="flex justify-center mt-8">
                     <button type="submit" class="flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <i class="fas fa-lock mr-2"></i> Pay Now
                     </button>
@@ -184,8 +182,14 @@
                 </button>
             </div>
             <p class="text-gray-600 mb-4">The CVV is a 3-digit code on the back of your card (or 4 digits for American Express).</p>
-            <div class="flex justify-center">
-                <img src="https://www.merchantequip.com/image/?logos=v|m|a|d&height=64" alt="Credit card CVV location" class="h-16">
+            <div class="flex justify-center p-4 bg-gray-50 rounded-lg">
+                <div class="text-center">
+                    <div class="mb-2 flex justify-center">
+                        <i class="fas fa-credit-card text-indigo-500 text-3xl"></i>
+                    </div>
+                    <p class="text-sm text-gray-600">For most cards: Look for the last 3 digits on the signature strip on the back of your card.</p>
+                    <p class="text-sm text-gray-600 mt-2">For American Express: Look for the 4 digits on the front of your card.</p>
+                </div>
             </div>
             <div class="mt-4 flex justify-end">
                 <button onclick="hideCVVTooltip()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Got it</button>

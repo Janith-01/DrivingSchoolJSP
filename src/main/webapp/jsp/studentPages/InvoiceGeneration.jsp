@@ -12,6 +12,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 font-sans">
+<%@ include file="studentNavbar.jsp" %>
     <div class="container mx-auto px-4 py-8 max-w-3xl">
         <div class="bg-white rounded-xl shadow-lg p-6">
             <%

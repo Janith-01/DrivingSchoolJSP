@@ -12,6 +12,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+<%@ include file="studentNavbar.jsp" %>
     <div class="container mx-auto px-4 py-8 max-w-6xl">
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             <!-- Header -->
