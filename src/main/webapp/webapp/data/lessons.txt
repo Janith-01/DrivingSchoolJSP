@@ -10,5 +10,6 @@ BeginnerLesson,1ff1a9f4-6c25-45fc-8498-7e2aee285ac0,adeesha1,sumudu,2025-05-20,1
 BeginnerLesson,14def3e3-0648-4f9c-b2b3-e7e014bbcc57,adeesha1,sumudu,2025-05-30,15:25,Beginner,DENIED
 BeginnerLesson,aaabfeb8-7821-408b-8626-bf94967e0296,adeesha1,sumudu,2025-05-19,09:25,Beginner,DENIED
 BeginnerLesson,e77af9c3-f76b-4665-ac2c-f6a482b02e3b,adeesha1,sumudu,2025-05-19,13:00,Beginner,PAID
-BeginnerLesson,0c9b523a-ea67-407a-a2f2-7ca53750db69,adeesha1,Janith viranga,2025-05-28,15:25,Beginner,ACCEPTED
-BeginnerLesson,5362d0d9-db61-4617-af1b-0be5517e347b,adeesha1,Janith viranga,2025-05-31,09:25,Beginner,PENDING
+BeginnerLesson,0c9b523a-ea67-407a-a2f2-7ca53750db69,adeesha1,Janith viranga,2025-05-28,15:25,Beginner,PAID
+BeginnerLesson,5362d0d9-db61-4617-af1b-0be5517e347b,adeesha1,Janith viranga,2025-05-31,09:25,Beginner,PAID
+BeginnerLesson,2a038f38-3f49-4884-8927-5f5c2155c609,adeesha1,Janith viranga,2025-05-20,13:00,Beginner,PAID
